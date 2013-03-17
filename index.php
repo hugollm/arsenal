@@ -12,6 +12,7 @@ header('Content-Type: text/html; charset=utf-8');
 require 'support/Autoload.php';
 Autoload::register('support');
 Autoload::register('src');
+Autoload::register('test');
 
 // aliases for debugging
 function dump(){call_user_func_array('Debug::printContents', func_get_args());};

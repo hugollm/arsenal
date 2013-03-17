@@ -62,8 +62,10 @@ class TestSession
         
         foreach($this->classes as $class)
         {
-            $obj = new $class;
             $rClass = new ReflectionClass($class);
+            if($rClass->isAbstract())
+                continue;
+            $obj = new $class;
             $methods = $this->getClassTests($class);
             
             foreach($methods as $method)

@@ -67,12 +67,14 @@ class SessionResults
             $status = null;
             
             $d->open('table');
-            foreach($results as $result)
+            foreach($results as $i=>$result)
             {
                 $newStatus = $result->getStatus();
                 if($status !== $newStatus)
                     $d->open('tr', $newStatus.'-header')
-                        ->node('td', '', ucfirst($newStatus).':'.count($this->{$newStatus}))
+                        ->node('td', '', ucfirst($newStatus).': '.count($this->{$newStatus}))
+                        ->node('td', '', 'class')
+                        ->node('td', '', 'method')
                         ->node('td', '', 'assertion')
                         ->node('td', '', 'file/line')
                         ->node('td', '', 'message')
@@ -80,7 +82,9 @@ class SessionResults
                 $status = $newStatus;
                 
                 $d->open('tr');
-                    $d->node('td', 'detail', $result->getClass().'::'.$result->getMethod());
+                    $d->node('td', 'detail', $i+1);
+                    $d->node('td', 'detail', basename($result->getClass()));
+                    $d->node('td', 'detail', $result->getMethod());
                     $d->node('td', 'detail', $result->getAssertion());
                     if($result->getFile())
                         $d->node('td', 'detail', $result->getFile().'('.$result->getLine().')');
