@@ -32,21 +32,31 @@ class TestFrameworkFlowTest
         $this->tearDown++;
     }
     
-    public function method1()
+    public function testMethod()
     {
-        Assert::true($this->setUp === 1);
-        Assert::true($this->tearDown === 0);
+        Assert::isTrue($this->setUp === 1);
+        Assert::isTrue($this->tearDown === 0);
     }
     
-    public function method2()
+    public function _withUnderline()
     {
-        Assert::true($this->setUp === 2);
-        Assert::true($this->tearDown === 1);
+        Assert::isTrue($this->setUp === 2);
+        Assert::isTrue($this->tearDown === 1);
     }
     
-    public function method3()
+    public function anotherTest()
     {
-        Assert::true($this->setUp === 3);
-        Assert::true($this->tearDown === 2);
+        Assert::isTrue($this->setUp === 3);
+        Assert::isTrue($this->tearDown === 2);
+    }
+    
+    private function privateMethod()
+    {
+        Assert::fail('private methods should be treated as tests');
+    }
+    
+    private function protectedMethod()
+    {
+        Assert::fail('protected methods should be treated as tests');
     }
 }

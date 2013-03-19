@@ -2,7 +2,6 @@
 namespace Chronos\Loggers;
 
 use Chronos\TestFramework\Assert;
-use InvalidArgumentException;
 
 abstract class LoggerTest
 {
@@ -24,15 +23,22 @@ abstract class LoggerTest
         {
             $this->logger->log(0, 'test message');
         }
-        catch(InvalidArgumentException $e)
+        catch(\InvalidArgumentException $e)
         {
             Assert::pass();
         }
     }
     
+    public function setMaxLevel()
+    {
+        $this->logger->setMaxLevel('warning');
+        $maxLevel = $this->logger->getMaxLevel();
+        Assert::isTrue($maxLevel === 'warning');
+    }
+    
     public function getSupportedLevels()
     {
-        $count = count($this->logger->getSupportedLevels());
-        Assert::true($count === 6);
+        $levels = $this->logger->getSupportedLevels();
+        Assert::isArray($levels)->hasCount(6);
     }
 }

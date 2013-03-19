@@ -154,7 +154,7 @@ class Debug
         $args = substr($args, 0, -2);
         
         // try executing methods if requested
-        if($tryExec and $rMethod->getNumberOfParameters() == 0 and $rMethod->isPublic() and preg_match('/^(get|is|has)/', $rMethod->getName()))
+        if($tryExec and $rMethod->getNumberOfRequiredParameters() === 0 and $rMethod->isPublic() and preg_match('/^(get|is|has)/', $rMethod->getName()))
             $result = self::getSpan('&nbsp;=>&nbsp;', 'dark').self::getPrettyVar($rMethod->invoke($obj));
         else
             $result = '';

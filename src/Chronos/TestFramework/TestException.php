@@ -1,10 +1,7 @@
 <?php
 namespace Chronos\TestFramework;
 
-use Exception;
-use InvalidArgumentException;
-
-class TestException extends Exception
+class TestException extends \Exception
 {
     protected $message = '';
     private $status = null;
@@ -14,7 +11,7 @@ class TestException extends Exception
     public function __construct($status, $assertion, $message = null)
     {
         if( ! in_array($status, array('pass', 'fail', 'skip')))
-            throw new InvalidArgumentException('TestResult status should be one of: pass|fail|skip');
+            throw new \InvalidArgumentException('TestResult status should be one of: pass|fail|skip');
         
         $this->status = $status;
         $this->assertion = $assertion;

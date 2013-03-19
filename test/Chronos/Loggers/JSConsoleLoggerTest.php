@@ -20,7 +20,21 @@ class JSConsoleLoggerTest extends LoggerTest
     {
         ob_start();
         $this->logger->debug('just a test');
-        Assert::true(ob_get_contents());
+        Assert::isTrue(ob_get_contents());
+        ob_end_clean();
+    }
+    
+    public function maxLevelWorks()
+    {
+        ob_start();
+        
+        $this->logger->setMaxLevel('info');
+        $this->logger->debug('just a test');
+        Assert::isFalse(ob_get_contents());
+        
+        $this->logger->info('just a test');
+        Assert::isTrue(ob_get_contents());
+        
         ob_end_clean();
     }
 }

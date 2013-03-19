@@ -2,7 +2,6 @@
 namespace Chronos\TestFramework\Assertions;
 
 use Chronos\TestFramework\TestException;
-use BadMethodCallException;
 
 class Assertion
 {
@@ -20,7 +19,7 @@ class Assertion
     {
         $method = '_'.$name;
         if( ! method_exists($this, $method))
-            throw new BadMethodCallException("Invalid assertion method: $name");
+            throw new \BadMethodCallException("Invalid assertion method: $name");
         
         array_unshift($args, $this->val);
         $result = call_user_func_array(array($this, $method), $args);
@@ -40,5 +39,10 @@ class Assertion
     {
         $this->not = true;
         return $this;
+    }
+    
+    public function _isEqual($val, $val2)
+    {
+        return $val === $val2;
     }
 }

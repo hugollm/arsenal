@@ -33,7 +33,7 @@ class Handler
         $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
         header("$protocol 500 Internal Server Error", true);
         header("Status: 500 Internal Server Error", true); // for fast_cgi
-        // echo $contents;
+        echo $contents;
         die;
     }
     

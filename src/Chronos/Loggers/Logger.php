@@ -1,8 +1,6 @@
 <?php
 namespace Chronos\Loggers;
 
-use InvalidArgumentException;
-
 abstract class Logger
 {
     private $maxLevel = 'debug';
@@ -14,7 +12,7 @@ abstract class Logger
     
     public function setMaxLevel($maxLevel)
     {
-        $this->maxLevel = $this->levelToCode($maxLevel);
+        $this->maxLevel = $maxLevel;
     }
     
     public function getSupportedLevels()
@@ -68,7 +66,7 @@ abstract class Logger
     public function log($level, $message)
     {
         if( ! $this->isValidLevel($level))
-            throw new InvalidArgumentException('Invalid log level: '.$level);
+            throw new \InvalidArgumentException('Invalid log level: '.$level);
         if($this->isLevelActive($level))
             $this->commit($level, $message);
     }
@@ -76,7 +74,7 @@ abstract class Logger
     private function levelToCode($level)
     {
         if( ! $this->isValidLevel($level))
-            throw new InvalidArgumentException('Invalid log level: '.$level);
+            throw new \InvalidArgumentException('Invalid log level: '.$level);
         
         $supportedLevels = $this->getSupportedLevels();
         return array_search($level, $supportedLevels)+1;

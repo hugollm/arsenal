@@ -1,11 +1,6 @@
 <?php
 namespace Chronos\TestFramework;
 
-use Exception;
-use InvalidArgumentException;
-use RuntimeException;
-use ReflectionClass;
-
 /*
     Responsible for Running tests and providing statistics about the results.
 */
@@ -22,10 +17,10 @@ class TestSession
     public function loadClass($class)
     {
         if( ! $this->isTestClass($class))
-            throw new InvalidArgumentException('Class name must end with: _Test');
+            throw new \InvalidArgumentException('Class name must end with: _Test');
         
         if( ! class_exists($class))
-            throw new InvalidArgumentException('Class does not exist: '.$class);
+            throw new \InvalidArgumentException('Class does not exist: '.$class);
         
         $this->classes[] = $class;
     }
@@ -33,7 +28,7 @@ class TestSession
     public function loadFile($path)
     {
         if( ! is_file($path))
-            throw new InvalidArgumentException('Invalid file: '.$path);
+            throw new \InvalidArgumentException('Invalid file: '.$path);
         
         $classesBefore = get_declared_classes();
         require_once $path;
@@ -56,13 +51,13 @@ class TestSession
     public function run()
     {
         if( ! $this->classes)
-            throw new RuntimeException('Nothing to run');
+            throw new \RuntimeException('Nothing to run');
         
         $results = new SessionResults;
         
         foreach($this->classes as $class)
         {
-            $rClass = new ReflectionClass($class);
+            $rClass = new \ReflectionClass($class);
             if($rClass->isAbstract())
                 continue;
             $obj = new $class;
@@ -96,7 +91,7 @@ class TestSession
     private function findFiles($dir, $recursive = false)
     {
         if( ! is_dir($dir))
-            throw new InvalidArgumentException('Invalid directory: '.$dir);
+            throw new \InvalidArgumentException('Invalid directory: '.$dir);
         
         $files = glob("$dir/*.php");
         
@@ -111,27 +106,39 @@ class TestSession
     
     private function isTestClass($class)
     {
+        // class name should end with "Test"
         $class = strtolower($class);
         $revClass = strrev($class);
         $revTest = strrev('test');
         return strpos($revClass, $revTest) === 0;
     }
     
-    private function isTestMethod($method)
+    private function isTestMethod($class, $method)
     {
+        // has to be public and cannot be constructor
+        $rMethod = new \ReflectionMethod($class, $method);
+        if( ! $rMethod->isPublic() or $rMethod->isConstructor() or $rMethod->isDestructor())
+            return false;
+        
+        // setup and teardown are not tests
         $method = strtolower($method);
         if($method === 'setup' or $method === 'teardown')
             return false;
-        return strpos($method, '_') === false;
+        
+        // probably magic method
+        if(strpos($method, '__') === 0)
+            return false;
+        
+        return true;
     }
     
     private function getClassTests($class)
     {
         $methods = get_class_methods($class);
         $tests = array();
-        foreach($methods as $m)
-            if($this->isTestMethod($m))
-                $tests[] = $m;
+        foreach($methods as $method)
+            if($this->isTestMethod($class, $method))
+                $tests[] = $method;
         return $tests;
     }
 }
