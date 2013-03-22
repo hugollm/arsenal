@@ -75,11 +75,11 @@ class SqlBuilder
     {
         $pms = $params;
         $params = array();
+        $obj = $this;
         
-        $sql = preg_replace_callback('@\:\?\+|\:\?|\?\+|\?@', function($matches) use($sql, &$pms, &$params)
+        $sql = preg_replace_callback('@\:\?\+|\:\?|\?\+|\?@', function($matches) use($obj, $sql, &$pms, &$params)
         {
             $match = array_shift($matches);
-            $identifierPattern = '|^[a-z-A-Z_][a-zA-Z0-9_]*(\.[a-z-A-Z_][a-zA-Z0-9_]*)?$|';
             $new = '';
             if($match == ':?+')
             {
@@ -88,7 +88,7 @@ class SqlBuilder
                     throw new \InvalidArgumentException(':?+ placeholder expects a non-empty array as parameter.');
                 foreach($array as $i)
                 {
-                    if( ! preg_match($identifierPattern, $i))
+                    if( ! $obj->validateIdentifier($i))
                         throw new \InvalidArgumentException(':?+ placeholder expects a non-empty array of identifiers as parameter. Invalid identifier found.');
                     $new .= ':'.$i.', ';
                 }
@@ -97,7 +97,7 @@ class SqlBuilder
             if($match == ':?')
             {
                 $p = array_shift($pms);
-                if(is_array($p) or is_object($p) or ! preg_match($identifierPattern, $p))
+                if(is_array($p) or is_object($p) or ! $obj->validateIdentifier($p))
                     throw new \InvalidArgumentException(':? placeholder expects a valid identifier as parameter.');
                 $new = ':'.$p;
             }
@@ -115,7 +115,7 @@ class SqlBuilder
             {
                 $p = array_shift($pms);
                 if(is_array($p) or is_object($p))
-                    throw new \InvalidArgumentException('? placeholder expects a number or string as parameter.');
+                    throw new \InvalidArgumentException('? placeholder does not support array or objects as parameter.');
                 $new = '?';
                 $params[] = $p;
             }

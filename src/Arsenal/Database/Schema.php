@@ -26,7 +26,7 @@ class Schema
         return sha1(serialize($this));
     }
     
-    public function getDoctrineSchema()
+    public function createDoctrineSchema()
     {
         $docSchema = new DoctrineSchema;
         foreach($this->tables as $table)

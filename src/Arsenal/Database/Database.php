@@ -16,6 +16,9 @@ class Database
     
     private $logger = null;
     
+    private $docConnection = null;
+    private $docPlatform = null;
+    
     public function __construct($dsn, $username = null, $password = null)
     {
         $this->dsn = $dsn;
@@ -116,20 +119,8 @@ class Database
         if($fromHash === $toHash)
             return;
         
-        $pdo = $this->getPDO();
-        $docConn = DoctrineDriverManager::getConnection(array('pdo'=>$pdo));
-        $docPlatform = $docConn->getDatabasePlatform();
-        $docSchemaManager = $docConn->getSchemaManager();
-        
-        $fromSchema = $docSchemaManager->createSchema();
-        $toSchema = $schema->getDoctrineSchema();
-        
-        $docComp = new DoctrineComparator;
-        $docDiff = $docComp->compare($fromSchema, $toSchema);
-        $sqls = $docDiff->toSaveSql($docPlatform);
-        
-        foreach($sqls as $sql)
-            $this->exec($sql);
+        $docSchema = $schema->createDoctrineSchema();
+        $this->doctrineMigrate($docSchema);
         
         $q = $this->getQuoteIdentifierChar();
         if($fromHash)
@@ -156,14 +147,60 @@ class Database
         }
     }
     
+    public function dropTable($table)
+    {
+        $docSchema = $this->createDoctrineSchema();
+        $dosSchema->dropTable($table);
+        $this->doctrineMigrate($docSchema);
+    }
+    
     public function dropAllTables()
     {
-        $pdo = $this->getPDO();
-        $docConn = DoctrineDriverManager::getConnection(array('pdo'=>$pdo));
-        $docPlatform = $docConn->getDatabasePlatform();
-        $docSchemaManager = $docConn->getSchemaManager();
-        $docSchema = $docSchemaManager->createSchema();
+        $docPlatform = $this->getDoctrinePlatform();
+        $docSchema = $this->createDoctrineSchema();
         $sqls = $docSchema->toDropSql($docPlatform);
+        foreach($sqls as $sql)
+            $this->exec($sql);
+    }
+    
+    public function reset()
+    {
+        $docSchema = $this->createDoctrineSchema();
+        $this->dropAllTables();
+        $this->doctrineMigrate($docSchema);
+    }
+    
+    private function getDoctrineConnection()
+    {
+        if($this->docConnection)
+            return $this->docConnection;
+        
+        $pdo = $this->getPDO();
+        return $this->docConnection = DoctrineDriverManager::getConnection(array('pdo'=>$pdo));
+    }
+    
+    private function getDoctrinePlatform()
+    {
+        if($this->docPlatform)
+            return $this->docPlatform;
+        
+        return $this->docPlatform = $this->getDoctrineConnection()->getDatabasePlatform();
+    }
+    
+    private function createDoctrineSchema()
+    {
+        return $this->docSchema = $this->getDoctrineConnection()->getSchemaManager()->createSchema();
+    }
+    
+    private function doctrineMigrate(DoctrineSchema $toSchema)
+    {
+        $fromPlatform = $this->getDoctrinePlatform();
+        $fromSchema = $this->createDoctrineSchema();
+        
+        $docComp = new DoctrineComparator;
+        $docDiff = $docComp->compare($fromSchema, $toSchema);
+        $sqls = $docDiff->toSaveSql($fromPlatform);
+        
         foreach($sqls as $sql)
             $this->exec($sql);
     }

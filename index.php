@@ -2,6 +2,7 @@
 
 use Arsenal\TestFramework\TestSession;
 use Arsenal\Benchmark;
+use Arsenal\Misc\Autoloader;
 
 // exposing all errors, setting timezone and charset properly
 error_reporting(-1);
@@ -9,10 +10,13 @@ date_default_timezone_set('Europe/London');
 header('Content-Type: text/html; charset=utf-8');
 
 // autoloading
-require 'support/Autoload.php';
-Autoload::register('support');
-Autoload::register('src');
-Autoload::register('test');
+require 'src/Arsenal/Misc/Autoloader.php';
+$loader = new Autoloader;
+$loader->setFileSystemCheck(true);
+$loader->addFolder('support');
+$loader->addFolder('src');
+$loader->addFolder('test');
+$loader->register();
 
 // aliases for debugging
 function dump(){call_user_func_array('Debug::printContents', func_get_args());};

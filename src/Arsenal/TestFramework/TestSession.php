@@ -82,7 +82,7 @@ class TestSession
     private function isTestClass($class)
     {
         $rClass = new \ReflectionClass($class);
-        $isSubclass = $rClass->isSubclassOf(__NAMESPACE__.'\TestFixture');
+        $isSubclass = $rClass->isSubclassOf(__NAMESPACE__.'\\TestFixture');
         $isAbstract = $rClass->isAbstract();
         return $isSubclass and ! $isAbstract;
     }

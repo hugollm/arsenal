@@ -13,7 +13,7 @@ abstract class DatabaseTest extends TestFixture
         if(self::$db)
             return;
         
-        self::$db = new Database('mysql:host=localhost;dbname=chronos', 'root', '');
+        self::$db = new Database('mysql:host=localhost;dbname=arsenal', 'root', '');
         
         $schema = new Schema;
         

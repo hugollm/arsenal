@@ -43,10 +43,8 @@ class TestException extends \Exception
     {
         $trace = $this->getTrace();
         
-        // dump($trace);
-        
         foreach($trace as $step)
-            if( ! empty($step['class']) and ($step['class'] == __NAMESPACE__.'\TestFixture') and $step['function'] !== '_run')
+            if( ! empty($step['class']) and ($step['class'] == __NAMESPACE__.'\\TestFixture' or $step['class'] == __NAMESPACE__.'\\Assertions\\Assertion') and $step['function'] !== '_run')
             {
                 $this->testFile = ! empty($step['file']) ? $step['file'] : null;
                 $this->testLine = ! empty($step['line']) ? $step['line'] : null;

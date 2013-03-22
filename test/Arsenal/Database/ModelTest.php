@@ -5,6 +5,11 @@ use Arsenal\TestFramework\Assert;
 
 class ModelTest extends DatabaseTest
 {
+    public function __destruct()
+    {
+        self::$db->sql('DELETE FROM :_users')->exec();
+    }
+    
     public function lifeTime()
     {
         $user = new GenericModel(self::$db, '_users');
@@ -46,7 +51,7 @@ class ModelTest extends DatabaseTest
         $user->save();
         unset($user);
         
-        $query = self::$db->sql('SELECT * FROM _users LIMIT 1')->query();
+        $query = self::$db->sql('SELECT * FROM :_users LIMIT 1')->query();
         $user = current($query);
         $user = new GenericModel(self::$db, '_users', $user->id, (array)$user);
         
@@ -101,7 +106,7 @@ class ModelTest extends DatabaseTest
         }
         catch(\RuntimeException $e)
         {
-            $this->assertTrue(get_class($e) === 'RuntimeException');
+            $this->assertObject($e)->isClass('RuntimeException');
         }
     }
 }

@@ -1,7 +1,7 @@
 <?php
 namespace Arsenal\Loggers;
 
-class HtmlLoggerTest extends loggerWithOutputTest
+class HtmlLoggerTest extends LoggerWithOutputTest
 {
     protected function getLogger()
     {
