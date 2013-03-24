@@ -45,9 +45,4 @@ class Assertion
     {
         return $val === $val2;
     }
-    
-    public function _isEqual($val, $val2)
-    {
-        return $this->_is($val, $val2);
-    }
 }

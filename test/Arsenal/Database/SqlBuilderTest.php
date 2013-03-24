@@ -27,7 +27,7 @@ class SqlBuilderTest extends TestFixture
         $sql->add('lorem', 'ipsum')->back();
         $sql->add('WHERE :id = ?', 7);
         
-        $this->assertString($sql->getString())->isEqual("SELECT * FROM {$q}users{$q} WHERE {$q}id{$q} = ?");
-        $this->assertArray($sql->getParams())->isEqual(array(7));
+        $this->assert($sql->getString())->is("SELECT * FROM {$q}users{$q} WHERE {$q}id{$q} = ?");
+        $this->assert($sql->getParams())->is(array(7));
     }
 }

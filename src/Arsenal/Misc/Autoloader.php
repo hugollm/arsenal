@@ -1,6 +1,9 @@
 <?php
 namespace Arsenal\Misc;
 
+/*
+    PSR0 compliant Autoloader.
+*/
 class Autoloader
 {
     private $autoloads = array();

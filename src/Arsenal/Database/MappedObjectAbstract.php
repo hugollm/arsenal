@@ -1,23 +1,36 @@
 <?php
 namespace Arsenal\Database;
 
-abstract class Model
+/*
+    An object that is mapped to a database table. The public properties 
+    represents the column values. This have to be abstract so the object's
+    properties won't collide with the private properties in this class.
+*/
+abstract class MappedObjectAbstract
 {
     private $db = null;
     private $table = '';
-    private $id = null;
     private $lastProperties = array();
+    private $id = null; // the underline is to diferentiate it from the public id
     
+    /*
+        If a mapped object is 
+    */
     final public function __construct(Database $db, $table, $id = null, $lastProperties = array())
     {
         $this->db = $db;
         $this->table = $table;
-        $this->lastProperties = $lastProperties;
-        $this->id = $id;
-        $this->setPublicId($id);
         
-        foreach($lastProperties as $key=>$val)
-            $this->$key = $val;
+        $this->id = $id;
+        $this->setPublic('id', $id);
+        
+        $this->lastProperties = $lastProperties;
+        $this->fill($lastProperties);
+    }
+    
+    public function __get($key)
+    {
+        return null;
     }
     
     public function fill(array $properties, $filter = null)
@@ -29,9 +42,18 @@ abstract class Model
             $filter = array_filter($filter);
         }
         
-        foreach($properties as $key=>$val)
-            if( ! $filter or in_array($key, $filter))
-                $this->$key = $val;
+        /*
+            This closure ensures that no propertie set will be mistaken by 
+            a private property of this class.
+        */
+        $obj = $this;
+        $callback = function() use($obj, $properties, $filter)
+        {
+            foreach($properties as $key=>$val)
+                if( ! $filter or in_array($key, $filter))
+                    $obj->$key = $val;
+        };
+        $callback();
     }
     
     public function save()
@@ -59,7 +81,7 @@ abstract class Model
             $sql = $this->db->sql('INSERT INTO :? (:?+) VALUES (?+)', $this->table, array_keys($props), $props)->exec();
             $id = $this->db->getLastInsertId();
             $this->id = $id;
-            $this->setPublicId($id);
+            $this->setPublic('id', $id);
         }
         $this->lastProperties = $this->getPublicProperties();
     }
@@ -69,32 +91,34 @@ abstract class Model
         if($this->isSaved())
         {
             $this->db->sql('DELETE FROM :? WHERE :id = ?', $this->table, $this->id)->exec();
-            $this->id = null;
-            $this->setPublicId(null);
+            $this->id = null; // private (for comparison)
+            $this->setPublic('id', null);
         }
     }
     
+    /*
+        Does this object exists in the database?
+    */
     public function isSaved()
     {
         return (bool)$this->id;
     }
     
-    public function isUpToDate()
+    /*
+        Does this object diverges from the database version?
+        If not in database yet, it diverges.
+    */
+    public function isTainted()
     {
         if( ! $this->isSaved())
-            return false;
+            return true;
         
         $properties = $this->getPublicProperties();
         foreach($properties as $key=>$val)
             if( ! isset($this->lastProperties[$key]) or $val !== $this->lastProperties[$key])
-                return false;
+                return true;
         
-        return true;
-    }
-    
-    public function isTainted()
-    {
-        return ! $this->isUpToDate();
+        return false;
     }
     
     private function getPublicProperties()
@@ -113,22 +137,12 @@ abstract class Model
         return $diff;
     }
     
-    private function getPublicId()
+    private function setPublic($key, $val)
     {
         $obj = $this;
-        $callback = function() use($obj)
+        $callback = function() use($obj, $key, $val)
         {
-            return $obj->id;
-        };
-        return $callback();
-    }
-    
-    private function setPublicId($id)
-    {
-        $obj = $this;
-        $callback = function() use($obj, $id)
-        {
-            $obj->id = $id;
+            $obj->$key = $val;
         };
         $callback();
     }

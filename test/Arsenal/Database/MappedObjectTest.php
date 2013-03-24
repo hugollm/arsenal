@@ -1,9 +1,7 @@
 <?php
 namespace Arsenal\Database;
 
-use Arsenal\TestFramework\Assert;
-
-class ModelTest extends DatabaseTest
+class MappedObjectTest extends DatabaseTest
 {
     public function __destruct()
     {
@@ -12,10 +10,10 @@ class ModelTest extends DatabaseTest
     
     public function lifeTime()
     {
-        $user = new GenericModel(self::$db, '_users');
+        $user = new MappedObject(self::$db, '_users');
         
         $this->assertFalse($user->isSaved());
-        $this->assertFalse($user->isUpToDate());
+        $this->assertTrue($user->isTainted());
         
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
@@ -23,28 +21,28 @@ class ModelTest extends DatabaseTest
         $user->save();
         
         $this->assertTrue($user->isSaved());
-        $this->assertTrue($user->isUpToDate());
+        $this->assertFalse($user->isTainted());
         
         $user->username = 'jonasdoe';
         
         $this->assertTrue($user->isSaved());
-        $this->assertFalse($user->isUpToDate());
+        $this->assertTrue($user->isTainted());
         
         $user->save();
         
         $this->assertTrue($user->isSaved());
-        $this->assertTrue($user->isUpToDate());
+        $this->assertFalse($user->isTainted());
         
         $user->drop();
         
         $this->assertFalse($user->isSaved());
-        $this->assertFalse($user->isUpToDate());
-        $this->assertFalse($user->id);
+        $this->assertTrue($user->isTainted());
+        $this->assertNull($user->id);
     }
     
     public function fromDB()
     {
-        $user = new GenericModel(self::$db, '_users');
+        $user = new MappedObject(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -53,15 +51,16 @@ class ModelTest extends DatabaseTest
         
         $query = self::$db->sql('SELECT * FROM :_users LIMIT 1')->query();
         $user = current($query);
-        $user = new GenericModel(self::$db, '_users', $user->id, (array)$user);
+        $user = new MappedObject(self::$db, '_users', $user->id, (array)$user);
         
         $this->assertTrue($user->isSaved());
-        $this->assertTrue($user->isUpToDate());
+        $this->assertFalse($user->isTainted());
+        $this->assert($user->username)->is('johndoe');
     }
     
     public function fill()
     {
-        $user = new GenericModel(self::$db, '_users');
+        $user = new MappedObject(self::$db, '_users');
         $post = array('name' => 'johndoe', 'age' => 22, 'is_admin' => true);
         $user->fill($post, 'name, age');
         
@@ -72,7 +71,7 @@ class ModelTest extends DatabaseTest
     
     public function idSetManually()
     {
-        $user = new GenericModel(self::$db, '_users');
+        $user = new MappedObject(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -85,13 +84,13 @@ class ModelTest extends DatabaseTest
         }
         catch(\RuntimeException $e)
         {
-            $this->assertTrue(get_class($e) === 'RuntimeException');
+            $this->assertObject($e)->isClass('RuntimeException');
         }
     }
     
     public function idChanged()
     {
-        $user = new GenericModel(self::$db, '_users');
+        $user = new MappedObject(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -108,5 +107,36 @@ class ModelTest extends DatabaseTest
         {
             $this->assertObject($e)->isClass('RuntimeException');
         }
+    }
+    
+    public function unknownProperty()
+    {
+        $user = new MappedObject(self::$db, '_users');
+        $this->assertNull($user->some_property);
+    }
+    
+    public function fillFilterWorks()
+    {
+        $user = new MappedObject(self::$db, '_users');
+        $post = array(
+            'username' => 'johndoe',
+            'age' => 22,
+            'foo' => 'bar',
+        );
+        $user->fill($post, 'username, age');
+        
+        $this->assertObject($user)->not()->hasProperty('foo');
+    }
+    
+    public function fillPrivateCollision()
+    {
+        $user = new MappedObject(self::$db, '_users');
+        $post = array(
+            'db' => 'foo',
+            'table' => 'bar',
+        );
+        $user->fill($post);
+        
+        $this->assertObject($user)->hasProperty('db')->hasProperty('table');
     }
 }

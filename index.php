@@ -35,4 +35,6 @@ $testSession->loadFolder('test', true);
 $results = $testSession->run();
 $results->dump();
 
+// require 'play.php';
+
 $bm->dump();
