@@ -25,6 +25,7 @@ abstract class DatabaseTest extends TestFixture
         $table->primary('id');
         
         self::$db->setLogger(new JsConsoleLogger);
-        self::$db->migrate($schema);
+        $docDb = new DoctrineWrapper(self::$db);
+        $docDb->migrate($schema);
     }
 }

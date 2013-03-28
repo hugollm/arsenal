@@ -1,30 +1,21 @@
 <?php
 namespace Arsenal\Database;
 
-use Doctrine\DBAL\Schema\Schema as DoctrineSchema;
-use Doctrine\DBAL\DriverManager as DoctrineDriverManager;
-use Doctrine\DBAL\Schema\Comparator as DoctrineComparator;
-use Doctrine\DBAL\DBALException;
 use Arsenal\Loggers\Logger;
 
 class Database
 {
-    private $dsn;
-    private $username;
-    private $password;
-    private $pdo;
-    
+    private $dsn = null;
+    private $username = null;
+    private $password = null;
+    private $pdo = null;
     private $logger = null;
-    
-    private $docConnection = null;
-    private $docPlatform = null;
     
     public function __construct($dsn, $username = null, $password = null)
     {
         $this->dsn = $dsn;
         $this->username = $username;
         $this->password = $password;
-        $this->pdo = null;
     }
     
     public function getDriver()
@@ -72,6 +63,8 @@ class Database
     
     public function query($sql, array $params = array())
     {
+        $sql = $this->normalizeIdentifierQuotes($sql);
+        
         // dump($sql);
         // dump($params);
         
@@ -89,6 +82,8 @@ class Database
     
     public function exec($sql, array $params = array())
     {
+        $sql = $this->normalizeIdentifierQuotes($sql);
+        
         // dump($sql);
         // dump($params);
         
@@ -104,105 +99,53 @@ class Database
         return $count;
     }
     
-    public function sql()
+    public function transaction($callback)
     {
-        $sqlBuilder = new SqlBuilder($this);
-        call_user_func_array(array($sqlBuilder, 'add'), func_get_args());
-        return $sqlBuilder;
-    }
-    
-    public function migrate(Schema $schema)
-    {
-        $fromHash = $this->getSchemaHash();
-        $toHash = $schema->getHash();
-        
-        if($fromHash === $toHash)
-            return;
-        
-        $docSchema = $schema->createDoctrineSchema();
-        $this->doctrineMigrate($docSchema);
-        
-        $q = $this->getQuoteIdentifierChar();
-        if($fromHash)
-            $this->exec("UPDATE {$q}_schema{$q} SET {$q}hash{$q} = ?", array($toHash));
-        else
-            $this->exec("INSERT INTO {$q}_schema{$q} ({$q}hash{$q}) VALUES (?)", array($toHash));
-    }
-    
-    public function getSchemaHash()
-    {
-        $q = $this->getQuoteIdentifierChar();
-        try
-        {
-            $results = $this->query("SELECT {$q}hash{$q} FROM {$q}_schema{$q}");
-            $first = current($results);
-            if($first)
-                return $first->hash;
-            else
-                return false;
-        }
-        catch(\PDOException $e)
-        {
-            return false;
-        }
-    }
-    
-    public function dropTable($table)
-    {
-        $docSchema = $this->createDoctrineSchema();
-        $dosSchema->dropTable($table);
-        $this->doctrineMigrate($docSchema);
-    }
-    
-    public function dropAllTables()
-    {
-        $docPlatform = $this->getDoctrinePlatform();
-        $docSchema = $this->createDoctrineSchema();
-        $sqls = $docSchema->toDropSql($docPlatform);
-        foreach($sqls as $sql)
-            $this->exec($sql);
-    }
-    
-    public function reset()
-    {
-        $docSchema = $this->createDoctrineSchema();
-        $this->dropAllTables();
-        $this->doctrineMigrate($docSchema);
-    }
-    
-    private function getDoctrineConnection()
-    {
-        if($this->docConnection)
-            return $this->docConnection;
+        if( ! is_callable($callback))
+            throw new \InvalidArgumentException('Invalid callback for database transaction');
         
         $pdo = $this->getPDO();
-        return $this->docConnection = DoctrineDriverManager::getConnection(array('pdo'=>$pdo));
+        $pdo->beginTransaction();
+        
+        static $depth = 0;
+        try
+        {
+            $depth++;
+            call_user_func($callback);
+            $depth--;
+            if($depth === 0)
+                $pdo->commit();
+        }
+        catch(Exception $e)
+        {
+            $depth--;
+            if($depth === 0)
+                $pdo->rollback();
+            throw $e;
+        }
     }
     
-    private function getDoctrinePlatform()
+    public function sql($sql = null)
     {
-        if($this->docPlatform)
-            return $this->docPlatform;
-        
-        return $this->docPlatform = $this->getDoctrineConnection()->getDatabasePlatform();
+        $sqlB = new SqlBuilder($this);
+        call_user_func_array(array($sqlB, 'add'), func_get_args());
+        return $sqlB;
     }
     
-    private function createDoctrineSchema()
+    public function createEntity($table)
     {
-        return $this->docSchema = $this->getDoctrineConnection()->getSchemaManager()->createSchema();
+        return new Entity($this, $table);
     }
     
-    private function doctrineMigrate(DoctrineSchema $toSchema)
+    public function entityQuery($table)
     {
-        $fromPlatform = $this->getDoctrinePlatform();
-        $fromSchema = $this->createDoctrineSchema();
-        
-        $docComp = new DoctrineComparator;
-        $docDiff = $docComp->compare($fromSchema, $toSchema);
-        $sqls = $docDiff->toSaveSql($fromPlatform);
-        
-        foreach($sqls as $sql)
-            $this->exec($sql);
+        return new EntityQuery($this, $table);
+    }
+    
+    private function normalizeIdentifierQuotes($sql)
+    {
+        $q = $this->getQuoteIdentifierChar();
+        return str_replace('`', $q, $sql);
     }
     
     private function logSql($sql, $start)

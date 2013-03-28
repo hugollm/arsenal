@@ -66,6 +66,7 @@ class Autoloader
     {
         $fileName = basename($file);
         $realName = basename(realpath($file));
+        $class = strstr(basename($file), '.', true);
         if($fileName !== $realName)
             throw new \RuntimeException('Class name diverges from file system: '.$class);
     }

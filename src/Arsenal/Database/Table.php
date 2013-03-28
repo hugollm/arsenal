@@ -70,9 +70,9 @@ class Table
     {
         $options = array();
         if($onDelete)
-            $options['onDelete'] = $onDelete;
+            $options['onDelete'] = strtoupper($onDelete);
         if($onUpdate)
-            $options['onUpdate'] = $onUpdate;
+            $options['onUpdate'] = strtoupper($onUpdate);
         
         $this->call('addForeignKeyConstraint', array($refTable, array($myCol), array($refCol), $options));
     }

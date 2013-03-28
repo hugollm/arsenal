@@ -125,6 +125,9 @@ class SqlBuilder
         return $sql;
     }
     
+    /*
+        :identifier => `identifier` (but with the apropriate quoting character)
+    */
     private function parseIdentifiers($sql)
     {
         $q = $this->db->getQuoteIdentifierChar();

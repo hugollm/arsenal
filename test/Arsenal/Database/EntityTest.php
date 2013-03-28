@@ -1,7 +1,7 @@
 <?php
 namespace Arsenal\Database;
 
-class MappedObjectTest extends DatabaseTest
+class EntityTest extends DatabaseTest
 {
     public function __destruct()
     {
@@ -10,7 +10,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function lifeTime()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         
         $this->assertFalse($user->isSaved());
         $this->assertTrue($user->isTainted());
@@ -42,7 +42,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function fromDB()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -51,7 +51,7 @@ class MappedObjectTest extends DatabaseTest
         
         $query = self::$db->sql('SELECT * FROM :_users LIMIT 1')->query();
         $user = current($query);
-        $user = new MappedObject(self::$db, '_users', $user->id, (array)$user);
+        $user = new Entity(self::$db, '_users', (array)$user);
         
         $this->assertTrue($user->isSaved());
         $this->assertFalse($user->isTainted());
@@ -60,7 +60,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function fill()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $post = array('name' => 'johndoe', 'age' => 22, 'is_admin' => true);
         $user->fill($post, 'name, age');
         
@@ -71,7 +71,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function idSetManually()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -90,7 +90,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function idChanged()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $user->email = 'johndoe@gmail.com';
         $user->username = 'johndoe';
         $user->password = sha1('123456');
@@ -111,13 +111,13 @@ class MappedObjectTest extends DatabaseTest
     
     public function unknownProperty()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $this->assertNull($user->some_property);
     }
     
     public function fillFilterWorks()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $post = array(
             'username' => 'johndoe',
             'age' => 22,
@@ -130,7 +130,7 @@ class MappedObjectTest extends DatabaseTest
     
     public function fillPrivateCollision()
     {
-        $user = new MappedObject(self::$db, '_users');
+        $user = new Entity(self::$db, '_users');
         $post = array(
             'db' => 'foo',
             'table' => 'bar',
