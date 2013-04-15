@@ -128,15 +128,22 @@ class EntityTest extends DatabaseTest
         $this->assertObject($user)->not()->hasProperty('foo');
     }
     
-    public function fillPrivateCollision()
+    public function updateIsGoingToDatabase()
     {
         $user = new Entity(self::$db, '_users');
-        $post = array(
-            'db' => 'foo',
-            'table' => 'bar',
-        );
-        $user->fill($post);
+        $user->username = 'johnsmith';
+        $user->email = 'johnsmith@gmail.com';
+        $user->password = '123456';
+        $user->save();
         
-        $this->assertObject($user)->hasProperty('db')->hasProperty('table');
+        // update
+        $user->username = 'johnseagal';
+        $user->save();
+        
+        // from db
+        $user = self::$db->selectOne('_users', array('id'=>$user->id));
+        $user = new Entity(self::$db, '_users', (array)$user);
+        
+        $this->assert($user->username)->is('johnseagal');
     }
 }

@@ -78,7 +78,7 @@ class DoctrineWrapper
         if($this->docConnection)
             return $this->docConnection;
         
-        $pdo = $this->db->getPDO();
+        $pdo = $this->db->getPdo();
         return $this->docConnection = DoctrineDriverManager::getConnection(array('pdo'=>$pdo));
     }
     
@@ -105,6 +105,6 @@ class DoctrineWrapper
         $sqls = $docDiff->toSaveSql($fromPlatform);
         
         foreach($sqls as $sql)
-            $this->exec($sql);
+            $this->db->exec($sql);
     }
 }

@@ -57,9 +57,22 @@ class SqlBuilder
         return $this->db->query($this->getString(), $this->getParams());
     }
     
+    public function queryOne()
+    {
+        return $this->db->queryOne($this->getString(), $this->getParams());
+    }
+    
     public function exec()
     {
         return $this->db->exec($this->getString(), $this->getParams());
+    }
+    
+    public function dump()
+    {
+        echo '<pre><code>';
+        var_dump($this->getString());
+        var_dump($this->getParams());
+        echo '</code></pre>';
     }
     
     public function validateIdentifier($i)

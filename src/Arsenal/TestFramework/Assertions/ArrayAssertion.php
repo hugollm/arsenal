@@ -10,8 +10,6 @@ class ArrayAssertion extends Assertion
     
     public function _isEqual($val, $val2)
     {
-        ksort($val);
-        ksort($val2);
         return $val === $val2;
     }
     

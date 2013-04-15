@@ -24,6 +24,12 @@ abstract class DatabaseTest extends TestFixture
             $table->column('password', 'string', 64);
         $table->primary('id');
         
+        $table = $schema->table('_storage');
+            $table->column('id', 'serial');
+            $table->column('key', 'string', 255);
+            $table->column('val', 'text');
+        $table->primary('id');
+        
         self::$db->setLogger(new JsConsoleLogger);
         $docDb = new DoctrineWrapper(self::$db);
         $docDb->migrate($schema);
