@@ -3,16 +3,16 @@ namespace Arsenal\Loggers;
 
 abstract class Logger
 {
-    private $maxLevel = 'debug';
+    private $level = 'debug';
     
-    public function getMaxLevel()
+    public function getLevel()
     {
-        return $this->maxLevel;
+        return $this->level;
     }
     
-    public function setMaxLevel($maxLevel)
+    public function setLevel($level)
     {
-        $this->maxLevel = $maxLevel;
+        $this->level = $level;
     }
     
     public function getSupportedLevels()
@@ -30,7 +30,7 @@ abstract class Logger
     
     public function isLevelActive($level)
     {
-        return $this->levelToCode($level) <= $this->levelToCode($this->maxLevel);
+        return $this->levelToCode($level) <= $this->levelToCode($this->level);
     }
     
     public function critical($message)

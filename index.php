@@ -1,40 +1,49 @@
 <?php
 
-use Arsenal\TestFramework\TestSession;
-use Arsenal\Benchmark;
 use Arsenal\Misc\Autoloader;
+use Arsenal\Misc\ErrorHandler;
+use Arsenal\Misc\Benchmark;
 
-// exposing all errors, setting timezone and charset properly
+/*
+    BOOTSTRAP
+*/
+$start = microtime(true);
+$memory = memory_get_usage(true);
 error_reporting(-1);
+ini_set('display_errors', true);
 date_default_timezone_set('Europe/London');
 header('Content-Type: text/html; charset=utf-8');
 
-// autoloading
+/*
+    AUTOLOADING
+*/
 require 'src/Arsenal/Misc/Autoloader.php';
 $loader = new Autoloader;
-$loader->setFileSystemCheck(true);
-$loader->addFolder('support');
+$loader->setCheckFileSystem(true);
+$loader->addFolder('legacy');
 $loader->addFolder('src');
-$loader->addFolder('test');
 $loader->register();
 
-// aliases for debugging
-function dump(){call_user_func_array('Debug::printContents', func_get_args());};
-function methods(){call_user_func_array('Debug::printMethods', func_get_args());};
+/*
+    ALIASES
+*/
+function dump(){call_user_func_array('Arsenal\\Misc\\Debugger::printContents', func_get_args());};
+function methods(){call_user_func_array('Arsenal\\Misc\\Debugger::printMethods', func_get_args());};
 
-// handlers
-set_error_handler('Handler::error');
-set_exception_handler('Handler::exception');
-register_shutdown_function( 'Handler::shutdown');
+/*
+    ERROR HANDLING
+*/
+$handler = new ErrorHandler;
+// $handler->setKeepBuffer(true);
+$handler->addFocus('src/Arsenal');
+$handler->addFocus('play.php');
+// $handler->listen(true, true, false);
+$handler->listen();
 
-$bm = new Benchmark;
-
-// run all tests
-$testSession = new TestSession;
-$testSession->loadFolder('test', true);
-$results = $testSession->run();
-$results->dump();
-
-// require 'play.php';
-
-$bm->dump();
+/*
+    PLAYING AROUND
+*/
+$bm = new Benchmark($start, $memory);
+require 'play.php';
+$bm->point();
+$bm->dumpSummary();

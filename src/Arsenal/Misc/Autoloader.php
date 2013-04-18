@@ -8,7 +8,7 @@ class Autoloader
 {
     private $autoloads = array();
     private $isRegistered = false;
-    private $fileSystemCheck = false;
+    private $checkFileSystem = false;
     
     /*
         Verifying the file system is useful at development time.
@@ -16,14 +16,14 @@ class Autoloader
         on Windows (because the files system is case insensitive).
         Should be turned off in production because of the overhead.
     */
-    public function setFileSystemCheck($fileSystemCheck) // bool
+    public function setCheckFileSystem($checkFileSystem) // bool
     {
-        $this->fileSystemCheck = $fileSystemCheck;
+        $this->checkFileSystem = $checkFileSystem;
     }
     
     public function addFolder($folder, $separator = '\\', $ext = '.php')
     {
-        if($this->fileSystemCheck)
+        if($this->checkFileSystem)
             $this->checkFolder($folder);
         
         $autoload = array('folder' => $folder, 'separator' => $separator, 'ext' => $ext);
@@ -53,7 +53,7 @@ class Autoloader
             $file = $autoload['folder'].$ds.str_replace($autoload['separator'], $ds, $class).$autoload['ext'];
             if(is_file($file))
             {
-                if($this->fileSystemCheck)
+                if($this->checkFileSystem)
                     $this->checkFile($file);
                 
                 require_once $file;
@@ -68,17 +68,17 @@ class Autoloader
         $realName = basename(realpath($file));
         $class = strstr(basename($file), '.', true);
         if($fileName !== $realName)
-            throw new \RuntimeException('Class name diverges from file system: '.$class);
+            throw new \RuntimeException('Class found but case diverges from file system. Tried "'.$class.'", found "'.$realName.'"');
     }
     
     private function checkFolder($folder)
     {
         if( ! is_dir($folder))
-            throw new \RuntimeException('Folder does not exist in file system: '.$folder);
+            throw new \RuntimeException('Folder "'.$folder.'" does not exist in file system');
         
         $folderName = basename($folder);
         $realName = basename(realpath($folder));
         if($folderName !== $realName)
-            throw new \RuntimeException('Folder name diverges from file system: '.$folder);
+            throw new \RuntimeException('Folder case diverges from file system. Tried '.$folder.', found '.$realName);
     }
 }
