@@ -83,7 +83,7 @@ class Debugger
         if(is_object($var))
         {
             $class = get_class($var);
-            $count = ($var instanceof \IteratorAggregate) ? count($var) : count(get_object_vars($var));
+            $count = ($var instanceof \Countable) ? count($var) : count(get_object_vars($var));
             $id = self::getObjectId($var);
             return self::getSpan($class, 'object').self::getSpan("($count)#$id", 'dark');
         }

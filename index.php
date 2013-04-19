@@ -7,8 +7,8 @@ use Arsenal\Misc\Benchmark;
 /*
     BOOTSTRAP
 */
-$start = microtime(true);
-$memory = memory_get_usage(true);
+$startTime = microtime(true);
+$startMemory = memory_get_usage(true);
 error_reporting(-1);
 ini_set('display_errors', true);
 date_default_timezone_set('Europe/London');
@@ -43,7 +43,7 @@ $handler->listen();
 /*
     PLAYING AROUND
 */
-$bm = new Benchmark($start, $memory);
+$bm = new Benchmark($startTime, $startMemory);
 require 'play.php';
 $bm->point();
 $bm->dumpSummary();
