@@ -62,6 +62,21 @@ class Request
         return isset($this->headers[$key]) ? $this->headers[$key] : null;
     }
     
+    public function getUrl()
+    {
+        return $this->getScheme().'://'.$this->getHost().$this->getRequestUrl();
+    }
+    
+    public function getBaseUrl()
+    {
+        return $this->getScheme().'://'.$this->getHost().$this->getBasePath().'/';
+    }
+    
+    public function getRequestUrl()
+    {
+        return $this->server['REQUEST_URI'];
+    }
+    
     public function getProtocol()
     {
         return isset($this->server['SERVER_PROTOCOL']) ? $this->server['SERVER_PROTOCOL'] : 'HTTP/1.0';
@@ -90,7 +105,14 @@ class Request
     
     public function getHost()
     {
-        return $this->getHeader('Host');
+        $host = $this->getHeader('Host');
+        $host = strtolower($host);
+        return $host;
+    }
+    
+    public function getPath()
+    {
+        return $this->getBasePath().$this->getPathInfo();
     }
     
     public function getBasePath()
@@ -103,6 +125,9 @@ class Request
     public function getPathInfo()
     {
         $uri = $this->server['REQUEST_URI'];
+        if(strpos($uri, '?') !== false)
+            $uri = strstr($uri, '?', true);
+        
         $script = $this->server['SCRIPT_NAME'];
         $base = dirname($script);
         
@@ -112,6 +137,14 @@ class Request
             return substr($uri, strlen($base));
         
         throw new \RuntimeException('Request object was unable to guess base path');
+    }
+    
+    public function getQueryString()
+    {
+        $uri = $this->server['REQUEST_URI'];
+        $query = strstr($uri, '?');
+        $query = substr($query, 1);
+        return $query;
     }
     
     public function getReferer()
