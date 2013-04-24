@@ -64,17 +64,17 @@ class Request
     
     public function getUrl()
     {
-        return $this->getScheme().'://'.$this->getHost().$this->getRequestUrl();
+        return $this->getScheme().'://'.$this->getHost().$this->getRelativeUrl();
+    }
+    
+    public function getRelativeUrl()
+    {
+        return $this->server['REQUEST_URI'];
     }
     
     public function getBaseUrl()
     {
         return $this->getScheme().'://'.$this->getHost().$this->getBasePath().'/';
-    }
-    
-    public function getRequestUrl()
-    {
-        return $this->server['REQUEST_URI'];
     }
     
     public function getProtocol()
@@ -174,7 +174,8 @@ class Request
     public function isEtagWeak()
     {
         $etag = $this->getHeader('If-None-Match');
-        return strpos($etag, 'W') === 0;
+        $etag = trim($etag);
+        return stripos($etag, 'W') === 0;
     }
     
     public function isHttps()
