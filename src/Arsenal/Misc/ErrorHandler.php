@@ -102,12 +102,10 @@ class ErrorHandler
     private function send($output)
     {
         if( ! $this->keepBuffer)
-            ob_clean();
+            $this->clearAllBuffers();
         
         // error output
-        $protocol = isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0';
-        header("$protocol 500 Internal Server Error", true);
-        header("Status: 500 Internal Server Error", true); // for fast_cgi
+        header('x', true, 500);
         header('Content-Type: text/html; charset=utf-8');
         echo $output;
         die;
@@ -165,6 +163,13 @@ class ErrorHandler
             }
             
         return $isFocused;
+    }
+    
+    private function clearAllBuffers()
+    {
+        while(ob_get_level() > 1)
+            ob_end_clean();
+        ob_clean();
     }
     
     private function printCss()
