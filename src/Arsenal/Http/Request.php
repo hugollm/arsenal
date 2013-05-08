@@ -125,27 +125,36 @@ class Request
     
     public function getBasePath()
     {
+        $originalUrl = $this->getRelativeUrl();
+        $url = $this->normalizePath($originalUrl);
+        
         $script = $this->server['SCRIPT_NAME'];
+        $script = $this->normalizePath($script);
         $base = dirname($script);
-        return $base;
+        
+        if(strpos($url, $script) === 0)
+            return substr($originalUrl, 0, strpos($originalUrl, basename($script))+strlen(basename($script)));
+        if(strpos($url, $base) === 0)
+            return substr($originalUrl, 0, strpos($originalUrl, basename($base))+strlen(basename($base)));
+        
+        throw new \RuntimeException('Request object was unable to guess base path');
     }
     
     public function getPathInfo()
     {
-        $uri = $this->server['REQUEST_URI'];
-        if(strpos($uri, '?') !== false)
-            $uri = strstr($uri, '?', true);
-        $uri = '/'.ltrim($uri, '/');
+        $originalUrl = $this->getRelativeUrl();
+        $url = $this->normalizePath($originalUrl);
         
         $script = $this->server['SCRIPT_NAME'];
+        $script = $this->normalizePath($script);
         $base = dirname($script);
         
-        if(strpos($uri, $script) === 0)
-            return substr($uri, strlen($script));
-        if(strpos($uri, $base) === 0)
-            return substr($uri, strlen($base));
+        if(strpos($url, $script) === 0)
+            return substr($originalUrl, strpos($originalUrl, basename($script))+strlen(basename($script)));
+        if(strpos($url, $base) === 0)
+            return substr($originalUrl, strpos($originalUrl, basename($base))+strlen(basename($base)));
         
-        throw new \RuntimeException('Request object was unable to guess base path');
+        throw new \RuntimeException('Request object was unable to guess path info');
     }
     
     public function getQueryString()
