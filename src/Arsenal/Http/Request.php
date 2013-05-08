@@ -67,6 +67,14 @@ class Request
         return $this->getScheme().'://'.$this->getHost().$this->getRelativeUrl();
     }
     
+    public function getCleanUrl()
+    {
+        $scheme = $this->getScheme();
+        $host = strtolower($this->getHost());
+        $relativeUrl = $this->normalizePath($this->getRelativeUrl());
+        return $scheme.'://'.$host.$relativeUrl;
+    }
+    
     public function getRelativeUrl()
     {
         return $this->server['REQUEST_URI'];
@@ -127,6 +135,7 @@ class Request
         $uri = $this->server['REQUEST_URI'];
         if(strpos($uri, '?') !== false)
             $uri = strstr($uri, '?', true);
+        $uri = '/'.ltrim($uri, '/');
         
         $script = $this->server['SCRIPT_NAME'];
         $base = dirname($script);
@@ -188,6 +197,26 @@ class Request
         return ($this->getMethod() === strtoupper($method));
     }
     
+    public function isUrlClean()
+    {
+        // host is not lowercased
+        $host = $this->getHost();
+        if($host !== strtolower($host))
+            return false;
+        
+        $relativeUrl = $this->getRelativeUrl();
+        
+        // have two or more sequential slashes
+        if(strpos($relativeUrl, '//') !== false)
+            return false;
+        
+        // ends with slash
+        if(strrpos($relativeUrl, '/') === strlen($relativeUrl)-1)
+            return false;
+        
+        return true;
+    }
+    
     /*
         Allows to define a POST input that overrides the method for the
         request in $this->getMethod().
@@ -195,6 +224,17 @@ class Request
     public function setMethodOverride($inputKey)
     {
         $this->methodOverride = $inputKey;
+    }
+    
+    public function makeUrl($pathInfo, $scheme = null)
+    {
+        if(strpos($pathInfo, '/') !== 0)
+            $pathInfo = '/'.$pathInfo;
+        if( ! $scheme)
+            $scheme = $this->getScheme();
+        $host = $this->getHost();
+        $basePath = $this->getBasePath();
+        return $scheme.'://'.$host.$basePath.$pathInfo;
     }
     
     private function parseHeaders(array $server)
@@ -211,5 +251,14 @@ class Request
                 $headers[$key] = $val;
             }
         return $headers;
+    }
+    
+    private function normalizePath($path)
+    {
+        $path = trim($path, '/');
+        $path = '/'.$path;
+        while(strpos($path, '//') !== false)
+            $path = str_replace('//', '/', $path);
+        return $path;
     }
 }
