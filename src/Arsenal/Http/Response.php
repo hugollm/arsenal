@@ -178,6 +178,14 @@ class Response
         die;
     }
     
+    public function sendRedirect($url, $status = 200)
+    {
+        $this->setBody('');
+        $this->setStatus($status);
+        $this->setRedirect($url);
+        $this->sendHard();
+    }
+    
     private function clearAllBuffers()
     {
         while(ob_get_level() > 1)
