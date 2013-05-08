@@ -32,8 +32,8 @@ class PathPattern
     {
         $path = trim($path, '/');
         
-        $patternChunks = explode('/', $this->pattern);
-        $pathChunks = explode('/', $path);
+        $patternChunks = $this->pattern ? explode('/', $this->pattern) : array();
+        $pathChunks = $path ? explode('/', $path) : array();
         
         while($patternChunks)
         {
@@ -53,6 +53,10 @@ class PathPattern
             if($placeholder)
                 $matches[] = $b ?: null;
         }
+        
+        if($pathChunks)
+            return false;
+        
         return true;
     }
     
