@@ -72,6 +72,8 @@ class Request
         $scheme = $this->getScheme();
         $host = strtolower($this->getHost());
         $relativeUrl = $this->normalizePath($this->getRelativeUrl());
+        if($this->normalizePath($this->getPathInfo()) === '/')
+            $relativeUrl .= '/';
         return $scheme.'://'.$host.$relativeUrl;
     }
     
@@ -214,13 +216,14 @@ class Request
             return false;
         
         $relativeUrl = $this->getRelativeUrl();
+        $pathInfo = $this->getPathInfo();
         
         // have two or more sequential slashes
         if(strpos($relativeUrl, '//') !== false)
             return false;
         
-        // ends with slash
-        if(strrpos($relativeUrl, '/') === strlen($relativeUrl)-1)
+        // pathInfo ends with slash
+        if($pathInfo !== '/' and strrpos($pathInfo, '/') === strlen($pathInfo)-1)
             return false;
         
         return true;
@@ -265,9 +268,8 @@ class Request
     private function normalizePath($path)
     {
         $path = trim($path, '/');
-        $path = '/'.$path;
         while(strpos($path, '//') !== false)
             $path = str_replace('//', '/', $path);
-        return $path;
+        return '/'.$path;
     }
 }
