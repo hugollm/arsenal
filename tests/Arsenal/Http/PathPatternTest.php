@@ -53,7 +53,27 @@ class PathPatternTest extends \PHPUnit_Framework_TestCase
         
         $p = new PathPattern('/foo/bar/{biz?}/{kaz}/{triz}');
         $this->assertTrue($p->match('/foo/bar/biz/kaz/triz'));
-        $this->assertFalse($p->match('/foo/bar/kaz/triz'));
+        $this->assertTrue($p->match('/foo/bar/kaz/triz'));
+        $this->assertFalse($p->match('/foo/bar/kaz'));
+        // absent optional behaves like it doesn't exist, pulling the rest back
+    }
+    
+    public function testAsterisk()
+    {
+        $p = new PathPattern('/foo/*');
+        $this->assertTrue($p->match('/foo'));
+        $this->assertTrue($p->match('/foo/bar'));
+        $this->assertTrue($p->match('/foo/bar/biz'));
+        $this->assertFalse($p->match('/fo'));
+        $this->assertFalse($p->match('/bar'));
+        $this->assertFalse($p->match('/'));
+        
+        $p = new PathPattern('*.png');
+        $this->assertTrue($p->match('image.png'));
+        $this->assertTrue($p->match('/foo/bar/image.png'));
+        $this->assertFalse($p->match('/foo/bar/image.jpg'));
+        $this->assertFalse($p->match('image.gif'));
+        $this->assertFalse($p->match('/'));
     }
     
     public function testRegex()
@@ -65,16 +85,22 @@ class PathPatternTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($p->match('image.jpg/foo'));
     }
     
+    public function testRegexIsAgainstNormalizedPath()
+    {
+        $p = new PathPattern('~.*\/?(.+\.jpg)');
+        $this->assertTrue($p->match('/foo/bar/image.jpg/'));
+    }
+    
     public function testSimpleMatches()
     {
         $p = new PathPattern('foo/bar/{biz}/kaz/{tar}/{mil?}');
         $m = array();
         $p->match('/foo/bar/biz/kaz/tar', $m);
         
-        $this->assertTrue(count($m) === 3);
+        $this->assertTrue(count($m) === 2);
         $this->assertTrue($m[0] === 'biz');
         $this->assertTrue($m[1] === 'tar');
-        $this->assertTrue($m[2] === null);
+        // absent optional doesn't get a match
     }
     
     public function testRegexMatches()
