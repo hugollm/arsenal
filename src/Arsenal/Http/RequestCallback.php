@@ -5,9 +5,10 @@ class RequestCallback
 {
     private $callback;
     private $method = null;
-    private $https = false;
+    private $https = null;
     private $host = null;
     private $pattern = null;
+    private $formats = array();
     
     public function __construct($callback)
     {
@@ -37,16 +38,25 @@ class RequestCallback
         $this->pattern = new PathPattern($pattern);
     }
     
+    public function setFormat($matchKey, $regex)
+    {
+        $this->formats[$matchKey] = $regex;
+    }
+    
     public function match(Request $request, array &$matches = array())
     {
         if($this->method and ! $request->isMethod($this->method))
             return false;
-        if($this->https and ! $request->isHttps())
+        if($this->https !== null and $request->isHttps() != $this->https)
             return false;
         if($this->host and ! $request->isHost($this->host))
             return false;
         if($this->pattern and ! $this->pattern->match($request->getPathInfo(), $matches))
             return false;
+        
+        foreach($this->formats as $key=>$format)
+            if(isset($matches[$key]) and ! preg_match('#^'.$format.'$#', $matches[$key]))
+                return false;
         return true;
     }
     

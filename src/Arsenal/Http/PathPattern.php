@@ -24,20 +24,25 @@ class PathPattern
         $pattern = $this->normalizePath($this->pattern);
         $pattern = preg_quote($pattern);
         
-        $optional = '#'.preg_quote(preg_quote('/{')).'[a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+'.preg_quote(preg_quote('?}')).'#';
-        $placeholder = '#'.preg_quote(preg_quote('/{')).'[a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+'.preg_quote(preg_quote('}')).'#';
+        $optional = '#'.preg_quote(preg_quote('/{')).'([a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+)'.preg_quote(preg_quote('?}')).'#';
+        $placeholder = '#'.preg_quote(preg_quote('/{')).'([a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+)'.preg_quote(preg_quote('}')).'#';
         $borderAsterisk = '#'.preg_quote(preg_quote('/*')).'#';
         $asterisk = '#'.preg_quote(preg_quote('*')).'#';
         
-        $pattern = preg_replace($optional, '(?:/([^/]+))?', $pattern);
-        $pattern = preg_replace($placeholder, '/([^/]+)', $pattern);
+        $pattern = preg_replace($optional, '(?:/(?P<$1>[^/]+))?', $pattern);
+        $pattern = preg_replace($placeholder, '/(?P<$1>[^/]+)', $pattern);
         $pattern = preg_replace($borderAsterisk, '(?:/.*)?', $pattern);
         $pattern = preg_replace($asterisk, '.*', $pattern);
         
         // dump($pattern, $path);
         
         $isMatch = (bool) preg_match('#^'.$pattern.'$#', $path, $matches);
-        array_shift($matches);
+        
+        // cleaning unnamed matches
+        foreach($matches as $key=>$val)
+            if(is_int($key))
+                unset($matches[$key]);
+        
         return $isMatch;
     }
     
