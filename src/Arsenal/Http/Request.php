@@ -208,6 +208,11 @@ class Request
         return ($this->getMethod() === strtoupper($method));
     }
     
+    public function isHost($host)
+    {
+        return strtolower($this->getHost()) === strtolower($host);
+    }
+    
     public function isUrlClean()
     {
         // host is not lowercased
