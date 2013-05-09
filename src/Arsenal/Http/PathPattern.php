@@ -24,10 +24,10 @@ class PathPattern
         $pattern = $this->normalizePath($this->pattern);
         $pattern = preg_quote($pattern);
         
-        $placeholder = '#'.preg_quote(preg_quote('/{')).'[^'.preg_quote(preg_quote('/{}?')).']+'.preg_quote(preg_quote('}')).'#';
-        $optional = '#'.preg_quote(preg_quote('/{')).'[^'.preg_quote(preg_quote('/{}?')).']+'.preg_quote(preg_quote('?}')).'#';
-        $asterisk = '#'.preg_quote(preg_quote('*')).'#';
+        $optional = '#'.preg_quote(preg_quote('/{')).'[a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+'.preg_quote(preg_quote('?}')).'#';
+        $placeholder = '#'.preg_quote(preg_quote('/{')).'[a-zA-Z0-9'.preg_quote(preg_quote('_.')).']+'.preg_quote(preg_quote('}')).'#';
         $borderAsterisk = '#'.preg_quote(preg_quote('/*')).'#';
+        $asterisk = '#'.preg_quote(preg_quote('*')).'#';
         
         $pattern = preg_replace($optional, '(?:/([^/]+))?', $pattern);
         $pattern = preg_replace($placeholder, '/([^/]+)', $pattern);
