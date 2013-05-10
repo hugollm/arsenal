@@ -11,11 +11,6 @@ class Response
     private $calculateEtag = false;
     private $etag = null;
     
-    public function __construct(Request $request)
-    {
-        $this->request = $request;
-    }
-    
     public function getBody()
     {
         return $this->body;
@@ -24,6 +19,11 @@ class Response
     public function getHeaders()
     {
         return $this->headers;
+    }
+    
+    public function setContext(Request $request)
+    {
+        $this->request = $request;
     }
     
     public function setStatus($status)
@@ -197,6 +197,15 @@ class Response
         $this->sendHard();
     }
     
+    public function sendRedirectBack()
+    {
+        if( ! $this->request)
+            throw new \RuntimeException('To redirect back you have to set a Request with setContext()');
+        
+        $url = $this->request->getReferer();
+        $this->sendRedirect($url);
+    }
+    
     public function sendNotModified()
     {
         $this->setStatus(304);
@@ -206,7 +215,7 @@ class Response
     
     private function tryNotModified()
     {
-        if($this->etag and $this->etag == $this->request->getEtag())
+        if($this->etag and $this->request and $this->etag == $this->request->getEtag())
             $this->sendNotModified();
     }
     
