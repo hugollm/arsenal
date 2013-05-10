@@ -75,6 +75,13 @@ class Response
         $this->setHeader('Expires', $header);
     }
     
+    public function setCache($calculateEtag, $expires = null)
+    {
+        $this->setCalculateEtag($calculateEtag);
+        if($expires)
+            $this->setExpires($expires);
+    }
+    
     public function setRedirect($url)
     {
         $this->setHeader('Location', $url);
@@ -128,6 +135,7 @@ class Response
     {
         if($this->calculateEtag)
             $this->setEtag(sha1($this->body));
+        $this->tryNotModified();
         
         $this->sendHeaders();
         $this->sendBody();
@@ -141,6 +149,7 @@ class Response
     {
         if($this->calculateEtag)
             $this->setEtag(sha1($this->body));
+        $this->tryNotModified();
         
         $this->clearAllBuffers();
         $this->sendHeaders();
@@ -163,8 +172,10 @@ class Response
         $this->setHeader('Content-Transfer-Encoding', 'chunked');
         $this->setHeader('Content-Length', filesize($filename));
         $this->setHeader('Content-Disposition', 'inline; filename="'.$basename.'"');
+        
         if($this->calculateEtag)
             $this->setEtag(sha1_file($filename));
+        $this->tryNotModified();
         
         if($download)
         {
@@ -184,6 +195,19 @@ class Response
         $this->setStatus($status);
         $this->setRedirect($url);
         $this->sendHard();
+    }
+    
+    public function sendNotModified()
+    {
+        $this->setStatus(304);
+        $this->setBody('');
+        $this->sendHard();
+    }
+    
+    private function tryNotModified()
+    {
+        if($this->etag and $this->etag == $this->request->getEtag())
+            $this->sendNotModified();
     }
     
     private function clearAllBuffers()
