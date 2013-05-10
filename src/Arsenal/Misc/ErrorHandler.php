@@ -50,7 +50,8 @@ class ErrorHandler
     
     public function handleError($code, $message, $filename, $line)
     {
-        throw new \ErrorException($message, $code, 0, $filename, $line);
+        $e = new \ErrorException($message, $code, 0, $filename, $line);
+        $this->handleException($e);
     }
     
     public function handleException($e)
