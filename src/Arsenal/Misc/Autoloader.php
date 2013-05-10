@@ -26,7 +26,7 @@ class Autoloader
         if($this->checkFileSystem)
             $this->checkFolder($folder);
         
-        $autoload = array('folder' => $folder, 'separator' => $separator, 'ext' => $ext);
+        $autoload = array('folder' => realpath($folder), 'separator' => $separator, 'ext' => $ext);
         $this->autoloads[$folder] = $autoload;
     }
     
