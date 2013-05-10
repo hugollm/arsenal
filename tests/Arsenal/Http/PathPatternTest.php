@@ -95,11 +95,11 @@ class PathPatternTest extends \PHPUnit_Framework_TestCase
     {
         $p = new PathPattern('foo/bar/{biz}/kaz/{tar}/{mil?}');
         $m = array();
-        $p->match('/foo/bar/biz/kaz/tar', $m);
+        $p->match('/foo/bar/lor/kaz/mit', $m);
         
         $this->assertTrue(count($m) === 2);
-        $this->assertTrue($m[0] === 'biz');
-        $this->assertTrue($m[1] === 'tar');
+        $this->assertTrue($m['biz'] === 'lor');
+        $this->assertTrue($m['tar'] === 'mit');
         // absent optional doesn't get a match
     }
     
