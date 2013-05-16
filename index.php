@@ -3,6 +3,7 @@
 use Arsenal\Misc\Autoloader;
 use Arsenal\Misc\ErrorHandler;
 use Arsenal\Misc\Benchmark;
+use Arsenal\Misc\Foo;
 
 /*
     BOOTSTRAP
@@ -34,11 +35,11 @@ function methods(){call_user_func_array('Arsenal\\Misc\\Debugger::printMethods',
     ERROR HANDLING
 */
 $handler = new ErrorHandler;
-// $handler->setKeepBuffer(true);
+$handler->setKeepBuffer(true);
 $handler->addFocus('src/Arsenal');
 $handler->addFocus('play.php');
-// $handler->listen(true, true, false);
-$handler->listen();
+// $handler->register(true, true, false);
+$handler->register();
 
 /*
     PLAYING AROUND
