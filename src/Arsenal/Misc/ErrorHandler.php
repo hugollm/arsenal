@@ -59,15 +59,18 @@ class ErrorHandler
         ob_start();
         self::printCss();
         
-        // some trace treatments
         $trace = $e->getTrace();
-        if(get_class($e) == 'ErrorException')
+        $title = get_class($e);
+        if($title == 'ErrorException')
+        {
             array_shift($trace);
+            $title = $this->getErrorType($e->getCode());
+        }
         $trace = array_reverse($trace);
         
         ?>
             <div class="eh-box">
-                <div class="title"><?php echo get_class($e); ?></div>
+                <div class="title"><?php echo $title; ?></div>
                 <div class="desc"><?php echo $e->getMessage(); ?></div>
                 <?php echo $this->getPrettyTrace($trace); ?>
                 <div class="file-line<?php if( ! $this->isFocused($e->getFile())) echo ' dark'; ?>"><?php echo $e->getFile().'('.$e->getLine().')'; ?></div>
@@ -83,13 +86,15 @@ class ErrorHandler
     public function handleShutdown()
     {
         $error = error_get_last();
-        if($error and $error['type'] == E_ERROR)
+        $handle = array(E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR);
+        
+        if($error and in_array($error['type'], $handle))
         {
             ob_start();
             $this->printCss();
             ?>
                 <div class="eh-box">
-                    <div class="title">FatalError</div>
+                    <div class="title"><?php echo $this->getErrorType($error['type']); ?></div>
                     <div class="desc"><?php echo $error['message']; ?></div>
                     <div class="file-line"><?php echo $error['file'].'('.$error['line'].')'; ?></div>
                 </div>
@@ -98,6 +103,29 @@ class ErrorHandler
             ob_end_clean();
             $this->send($output);
         }
+    }
+    
+    private function getErrorType($code)
+    {
+        $types = array(
+            E_ERROR => 'E_ERROR',
+            E_WARNING => 'E_WARNING',
+            E_PARSE => 'E_PARSE',
+            E_NOTICE => 'E_NOTICE',
+            E_CORE_ERROR => 'E_CORE_ERROR',
+            E_CORE_WARNING => 'E_CORE_WARNING',
+            E_COMPILE_ERROR => 'E_COMPILE_ERROR',
+            E_COMPILE_WARNING => 'E_COMPILE_WARNING',
+            E_USER_ERROR => 'E_USER_ERROR',
+            E_USER_WARNING => 'E_USER_WARNING',
+            E_USER_NOTICE => 'E_USER_NOTICE',
+            E_STRICT => 'E_STRICT',
+            E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR',
+            E_DEPRECATED => 'E_DEPRECATED',
+            E_USER_DEPRECATED => 'E_USER_DEPRECATED',
+            E_ALL => 'E_ALL',
+        );
+        return isset($types[$code]) ? $types[$code] : 'UNKNOWN ERROR';
     }
     
     private function send($output)
@@ -175,72 +203,67 @@ class ErrorHandler
     
     private function printCss()
     {
-        static $printed = false;
-        if( ! $printed)
-        {
-            ?>
-                <style type="text/css">
-                    
-                    html body div.eh-box {
-                        margin: 0 !important;
-                        padding: 15px !important;
-                        border: 0 !important;
-                        font-size: 100% !important;
-                        vertical-align: baseline !important;
-                        background-color: #f5f5f5 !important;
-                        font: 13px/13px 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-                        color: #333 !important;
-                    }
+        ?>
+            <style type="text/css">
+                
+                html body div.eh-box {
+                    margin: 0 !important;
+                    padding: 15px !important;
+                    border: 0 !important;
+                    font-size: 100% !important;
+                    vertical-align: baseline !important;
+                    background-color: #f5f5f5 !important;
+                    font: 13px/13px 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+                    color: #333 !important;
+                }
 
-                    html body div.eh-box * {
-                        margin: 0 !important;
-                        padding: 0 !important;
-                        border: 0 !important;
-                        font-size: 100% !important;
-                        font: inherit !important;
-                        vertical-align: baseline !important;
-                        color: #333 !important;
-                    }
-                    
-                    html body div.eh-box .dark, html body div.eh-box .dark * {
-                        color: #aaa !important;
-                    }
-                    
-                    html body div.eh-box div.title {
-                        font-size: 30px !important;
-                        line-height: 30px !important;
-                        margin-left: -2px !important;
-                    }
-                    
-                    html body div.eh-box div.desc {
-                        font-size: 20px !important;
-                        line-height: 20px !important;
-                        color: #444 !important;
-                        margin-top: 15px !important;
-                    }
-                    
-                    html body div.eh-box table.trace {
-                        margin-top: 15px !important;
-                        font-family: consolas, monospace !important;
-                        font-size: 12px !important;
-                        line-height: 18px !important;
-                        margin-bottom: 15px !important;
-                    }
-                    
-                    html body div.eh-box table.trace td {
-                        padding-right: 30px !important;
-                    }
-                    
-                    html body div.eh-box div.file-line {
-                        font-family: monospace !important;
-                        font-size: 13px !important;
-                        line-height: 18px !important;
-                        margin-top: 15px !important;
-                    }
-                    
-                </style>
-            <?php
-        }
-        $printed = true;
+                html body div.eh-box * {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: 0 !important;
+                    font-size: 100% !important;
+                    font: inherit !important;
+                    vertical-align: baseline !important;
+                    color: #333 !important;
+                }
+                
+                html body div.eh-box .dark, html body div.eh-box .dark * {
+                    color: #aaa !important;
+                }
+                
+                html body div.eh-box div.title {
+                    font-size: 30px !important;
+                    line-height: 30px !important;
+                    margin-left: -2px !important;
+                }
+                
+                html body div.eh-box div.desc {
+                    font-size: 20px !important;
+                    line-height: 20px !important;
+                    color: #444 !important;
+                    margin-top: 15px !important;
+                }
+                
+                html body div.eh-box table.trace {
+                    margin-top: 15px !important;
+                    font-family: consolas, monospace !important;
+                    font-size: 12px !important;
+                    line-height: 18px !important;
+                    margin-bottom: 15px !important;
+                }
+                
+                html body div.eh-box table.trace td {
+                    padding-right: 30px !important;
+                }
+                
+                html body div.eh-box div.file-line {
+                    font-family: monospace !important;
+                    font-size: 13px !important;
+                    line-height: 18px !important;
+                    margin-top: 15px !important;
+                }
+                
+            </style>
+        <?php
     }
 }
