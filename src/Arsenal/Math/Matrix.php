@@ -78,7 +78,39 @@ class Matrix
         
         for($r=0; $r<$this->rowCount; $r++)
             for($c=0; $c<$this->colCount; $c++)
-                $this->set($r, $c, call_user_func($callback, $this->get($r, $c), $r, $c));
+            {
+                $return = call_user_func($callback, $this->get($r, $c), $r, $c);
+                if($return !== null)
+                    $this->set($r, $c, $return);
+            }
+    }
+    
+    public function eachRow($callback)
+    {
+        if( ! is_callable($callback))
+            throw new \InvalidArgumentException('Invalid callback for Matrix->eachRow');
+        
+        for($r=0; $r<$this->rowCount; $r++)
+        {
+            $row = $this->getRow($r);
+            $return = call_user_func($callback, $row, $r);
+            if($return instanceof self)
+                $this->setRow($r, $return);
+        }
+    }
+    
+    public function eachCol($callback)
+    {
+        if( ! is_callable($callback))
+            throw new \InvalidArgumentException('Invalid callback for Matrix->eachCol');
+        
+        for($c=0; $c<$this->colCount; $c++)
+        {
+            $col = $this->getCol($c);
+            $return = call_user_func($callback, $col, $c);
+            if($return instanceof self)
+                $this->setCol($c, $return);
+        }
     }
     
     public function multiply($n)
@@ -86,6 +118,17 @@ class Matrix
         $this->each(function($x) use($n)
         {
             return $x*$n;
+        });
+    }
+    
+    public function add(self $matrix)
+    {
+        if( ! $this->isSameOrderAs($matrix))
+            throw new \InvalidArgumentException('Trying to add matrixes of different orders');
+        
+        $this->each(function($x, $r, $c) use($matrix)
+        {
+            return $x + $matrix->get($r, $c);
         });
     }
     
@@ -105,15 +148,25 @@ class Matrix
         $this->setCol($c2, $col1);
     }
     
+    public function isSameOrderAs(self $matrix)
+    {
+        if($this->rowCount != $matrix->getrowCount() or $this->colCount != $matrix->getColCount())
+            return false;
+        return true;
+    }
+    
     public function printTable()
     {
-        echo '<table style="margin:10px">';
+        echo '<table style="margin:10px;">';
         for($r=0; $r<$this->rowCount; $r++)
         {
             echo '<tr>';
             for($c=0; $c<$this->colCount; $c++)
             {
-                echo '<td style="border:1px solid #ccc;background-color:#eee;width:25px;text-align:right;">'.$this->get($r, $c).'</td>';
+                $x = $this->get($r, $c);
+                if(strpos((string)$x, '.') !== false)
+                    $x = number_format($x, 2);
+                echo '<td style="border:1px solid #ccc;background-color:#eee;width:25px;text-align:right;">'.$x.'</td>';
             }
             echo '</tr>';
         }
