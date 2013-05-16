@@ -23,64 +23,28 @@ class ErrorHandler
         $this->keepBuffer = $keepBuffer;
     }
     
-    public function listenErrors()
+    public function register($errors = true, $exceptions = true, $shutdown = true)
     {
-        set_error_handler(array($this, 'handleError'));
-    }
-    
-    public function listenExceptions()
-    {
-        set_exception_handler(array($this, 'handleException'));
-    }
-    
-    public function listenShutdown()
-    {
-        register_shutdown_function(array($this, 'handleShutdown'));
-    }
-    
-    public function listen($errors = true, $exceptions = true, $shutdown = true)
-    {
+        if($errors and $exceptions and $shutdown)
+            error_reporting(0);
+        
         if($errors)
-            $this->listenErrors();
+            set_error_handler(array($this, 'handleError'));
         if($exceptions)
-            $this->listenExceptions();
+            set_exception_handler(array($this, 'handleException'));
         if($shutdown)
-            $this->listenShutdown();
+            register_shutdown_function(array($this, 'handleShutdown'));
     }
     
     public function handleError($code, $message, $filename, $line)
     {
         $e = new \ErrorException($message, $code, 0, $filename, $line);
-        $this->handleException($e);
+        $this->printException($e);
     }
     
     public function handleException($e)
     {
-        ob_start();
-        self::printCss();
-        
-        $trace = $e->getTrace();
-        $title = get_class($e);
-        if($title == 'ErrorException')
-        {
-            array_shift($trace);
-            $title = $this->getErrorType($e->getCode());
-        }
-        $trace = array_reverse($trace);
-        
-        ?>
-            <div class="eh-box">
-                <div class="title"><?php echo $title; ?></div>
-                <div class="desc"><?php echo $e->getMessage(); ?></div>
-                <?php echo $this->getPrettyTrace($trace); ?>
-                <div class="file-line<?php if( ! $this->isFocused($e->getFile())) echo ' dark'; ?>"><?php echo $e->getFile().'('.$e->getLine().')'; ?></div>
-            </div>
-        <?php
-        
-        $output = ob_get_contents();
-        ob_end_clean();
-        
-        $this->send($output);
+        $this->printException($e);
     }
     
     public function handleShutdown()
@@ -90,19 +54,45 @@ class ErrorHandler
         
         if($error and in_array($error['type'], $handle))
         {
-            ob_start();
-            $this->printCss();
-            ?>
-                <div class="eh-box">
-                    <div class="title"><?php echo $this->getErrorType($error['type']); ?></div>
-                    <div class="desc"><?php echo $error['message']; ?></div>
-                    <div class="file-line"><?php echo $error['file'].'('.$error['line'].')'; ?></div>
-                </div>
-            <?php
-            $output = ob_get_contents();
-            ob_end_clean();
-            $this->send($output);
+            $e = new \ErrorException($error['message'], $error['type'], 0, $error['file'], $error['line']);
+            $this->printException($e, true);
         }
+    }
+    
+    public function printException($e, $fatal = false)
+    {
+        ob_start();
+        self::printCss();
+        
+        $title = get_class($e);
+        $trace = $e->getTrace();
+        $isFocused = $this->isFocused($e->getFile());
+        $printTrace = true;
+        
+        if($title == 'ErrorException')
+        {
+            array_shift($trace);
+            $title = $this->getErrorType($e->getCode());
+        }
+        if($fatal)
+        {
+            $isFocused = true;
+            $printTrace = false;
+        }
+        
+        ?>
+            <div class="eh-box">
+                <div class="title"><?php echo $title; ?></div>
+                <div class="desc"><?php echo $e->getMessage(); ?></div>
+                <?php if($printTrace) echo $this->getPrettyTrace($trace); ?>
+                <div class="file-line<?php if( ! $isFocused) echo ' dark'; ?>"><?php echo $e->getFile().'('.$e->getLine().')'; ?></div>
+            </div>
+        <?php
+        
+        $output = ob_get_contents();
+        ob_end_clean();
+        
+        $this->send($output);
     }
     
     private function getErrorType($code)
@@ -142,6 +132,8 @@ class ErrorHandler
     
     private function getPrettyTrace(array $trace)
     {
+        $trace = array_reverse($trace);
+        
         $string = '<table class="trace">';
         array_unshift($trace, array('function'=>'{start}'));
         foreach($trace as $i => $step)
