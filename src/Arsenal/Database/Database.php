@@ -247,6 +247,12 @@ class Database
         return $sqlB;
     }
     
+    public function migrate(Schema $schema)
+    {
+        $doc = new DoctrineWrapper($this);
+        $doc->migrate($schema);
+    }
+    
     public function createEntity($table)
     {
         return new Entity($this, $table);
@@ -284,12 +290,12 @@ class Database
     private function logSql($sql, $start)
     {
         if($this->logger)
-            $this->logger->debug('SQL('.round((microtime(true)-$start)*1000, 2).'ms): '.$sql);
+            $this->logger->debug('SQL('.number_format((microtime(true)-$start)*1000, 2, '.', ',').'ms): '.$sql);
     }
     
     private function logConnection($driver, $start)
     {
         if($this->logger)
-            $this->logger->debug('Connect('.$driver.'): '.round((microtime(true)-$start)*1000, 2).'ms');
+            $this->logger->debug('Connect('.$driver.'): '.number_format((microtime(true)-$start)*1000, 2, '.', ',').'ms');
     }
 }
