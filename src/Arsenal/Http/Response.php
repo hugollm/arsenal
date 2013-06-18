@@ -118,6 +118,11 @@ class Response
         $this->appendBody($body);
     }
     
+    public function captureCurrent()
+    {
+        $this->appendBody(ob_get_contents());
+    }
+    
     public function sendHeaders()
     {
         header_remove('X-Powered-By');
