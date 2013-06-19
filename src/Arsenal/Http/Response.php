@@ -12,6 +12,11 @@ class Response
     private $calculateEtag = false;
     private $etag = null;
     
+    public function __construct(Request $request = null)
+    {
+        $this->request = $request;
+    }
+    
     public function getBody()
     {
         return $this->body;
@@ -20,11 +25,6 @@ class Response
     public function getHeaders()
     {
         return $this->headers;
-    }
-    
-    public function setContext(Request $request)
-    {
-        $this->request = $request;
     }
     
     public function setStatus($status)
