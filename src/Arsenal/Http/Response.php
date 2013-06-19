@@ -7,6 +7,7 @@ class Response
     private $status = 200;
     private $body = '';
     private $headers = array();
+    private $cookies = array();
     
     private $calculateEtag = false;
     private $etag = null;
@@ -82,6 +83,44 @@ class Response
             $this->setExpires($expires);
     }
     
+    /*
+        $expiration should be strtotime formatted (ex: 5 years). Default is 
+        to be valid for just the current browser session (until the user
+        closes the browser).
+        
+        $path default is the root of the domain (/), or base path if there's a
+        request object attatched.
+        
+        $domain default is the current one.
+    */
+    public function setCookie($key, $val, $expiration = null, $path = null, $domain = null, $secureOnly = false, $httpOnly = true)
+    {
+        if($expiration !== null)
+            $expiration = strtotime($expiration);
+        if($path === null and $this->request)
+            $path = $this->request->getBasePath();
+        if($path === null and ! $this->request)
+            $path = '/';
+        
+        $this->cookies[] = array(
+            'key' => $key,
+            'val' => $val,
+            'expiration' => $expiration,
+            'path' => $path,
+            'domain' => $domain,
+            'secureOnly' => $secureOnly,
+            'httpOnly' => $httpOnly,
+        );
+    }
+    
+    /*
+        To drop a cookie you must match the arguments used to create it.
+    */
+    public function dropCookie($key, $path = null, $domain = null, $secureOnly = false, $httpOnly = true)
+    {
+        $this->setCookie($key, false, '-5 years', $path, $domain, $secureOnly, $httpOnly);
+    }
+    
     public function setRedirect($url)
     {
         $this->setHeader('Location', $url);
@@ -129,6 +168,8 @@ class Response
         header('x', true, $this->status);
         foreach($this->headers as $key=>$val)
             header($key.': '.$val);
+        foreach($this->cookies as $c)
+            setcookie($c['key'], $c['val'], $c['expiration'], $c['path'], $c['domain'], $c['secureOnly'], $c['httpOnly']);
     }
     
     public function sendBody()
