@@ -157,9 +157,11 @@ class Response
         $this->appendBody($body);
     }
     
-    public function captureCurrent()
+    public function captureCurrent($clean = false)
     {
         $this->appendBody(ob_get_contents());
+        if($clean)
+            $this->clearAllBuffers();
     }
     
     public function sendHeaders()
