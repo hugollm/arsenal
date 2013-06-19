@@ -22,7 +22,7 @@ class FakeCookieJar extends CookieJar
         return isset($this->cookies[$key]) ? $this->cookies[$key] : null;
     }
     
-    public function set($key, $val)
+    public function set($key, $val, $expiration = null)
     {
         $this->cookies[$key] = $val;
     }
