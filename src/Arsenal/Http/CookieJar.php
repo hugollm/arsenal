@@ -21,6 +21,16 @@ class CookieJar
         $this->path = $request->getBasePath();
     }
     
+    public function getRequest()
+    {
+        return $this->request;
+    }
+    
+    public function getResponse()
+    {
+        return $this->response;
+    }
+    
     public function get($key)
     {
         return isset($this->cookies[$key]) ? $this->cookies[$key] : null;
