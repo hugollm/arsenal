@@ -28,6 +28,9 @@ class Sql
     
     public function vbind($needle, $param)
     {
+        if(is_array($param))
+            throw new \InvalidArgumentException('Bind param shall not be an array');
+        
         $this->bindOperation($needle, '?', array($param));
         return $this;
     }
@@ -41,6 +44,9 @@ class Sql
     
     public function ibind($needle, $param)
     {
+        if(is_array($param))
+            throw new \InvalidArgumentException('Bind param shall not be an array');
+        
         if( ! $this->isValidIdentifier($param))
             throw new \InvalidArgumentException('Trying to bind invalid identifier "'.$param.'"');
         
@@ -51,7 +57,7 @@ class Sql
     public function ibinds($needle, array $params)
     {
         $rep = '';
-        foreach($param as $param)
+        foreach($params as $param)
         {
             if( ! $this->isValidIdentifier($param))
                 throw new \InvalidArgumentException('Trying to bind invalid identifier "'.$param.'"');
@@ -65,6 +71,9 @@ class Sql
     
     public function nbind($needle, $param)
     {
+        if(is_array($param))
+            throw new \InvalidArgumentException('Bind param shall not be an array');
+        
         if( ! is_numeric($param))
             throw new \InvalidArgumentException('Trying to bind invalid number "'.$param.'"');
         
@@ -75,7 +84,7 @@ class Sql
     public function nbinds($needle, array $params)
     {
         $rep = '';
-        foreach($param as $param)
+        foreach($params as $param)
         {
             if( ! is_numeric($param))
                 throw new \InvalidArgumentException('Trying to bind invalid number "'.$param.'"');
