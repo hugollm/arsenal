@@ -1,6 +1,5 @@
 <?php
 namespace Arsenal\Database;
-
 use Arsenal\Loggers\Logger;
 
 class Database
@@ -16,6 +15,21 @@ class Database
         $this->dsn = $dsn;
         $this->username = $username;
         $this->password = $password;
+    }
+    
+    public static function createFromParams($driver, $host, $dbname = null, $username = null, $password = null, $port = null)
+    {
+        if($driver === 'sqlite')
+            return new Database("$driver:$host");
+        else
+        {
+            $dsn = "$driver:host=$host";
+            if($dbname)
+                $dsn .= ";dbname=$dbname";
+            if($port)
+                $dsn .= ";port=$port";
+            return new Database($dsn, $username, $password);
+        }
     }
     
     public function getDriver()
@@ -40,14 +54,17 @@ class Database
     
     public function getPdo()
     {
-        $driver = $this->getDriver();
-        $options = $options = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
-        if($driver == 'mysql')
-            $options[1002] = "SET NAMES 'UTF8'";
-        
         // only connect once (may throw exception)
         if( ! $this->pdo)
         {
+            $driver = $this->getDriver();
+            $options = $options = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
+            
+            // 1002 is for PDO::MYSQL_ATTR_INIT_COMMAND, the number is
+            // used instead because of a possible php bug
+            if($driver == 'mysql')
+                $options[1002] = "SET NAMES 'UTF8'";
+            
             $start = microtime(true);
             $this->pdo = new \PDO($this->dsn, $this->username, $this->password, $options);
             $this->logConnection($driver, $start);
@@ -242,9 +259,10 @@ class Database
     
     public function sql($sql = null)
     {
-        $sqlB = new SqlBuilder($this);
-        call_user_func_array(array($sqlB, 'add'), func_get_args());
-        return $sqlB;
+        $sqlobj = new Sql($this);
+        if($sql)
+            $sqlobj->add($sql);
+        return $sqlobj;
     }
     
     public function migrate(Schema $schema)
