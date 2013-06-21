@@ -98,96 +98,76 @@ class Database
     
     public function select($table, array $where = array(), array $fields = array())
     {
-        $sql = 'SELECT ';
-        if( ! $fields)
-            $sql .= '* ';
-        else
-        {
-            foreach($fields as $f)
-                $sql .= "`$f`, ";
-            $sql = substr($sql, 0, -2).' ';
-        }
-        $sql .= "FROM `$table` ";
+        $sql = $this->sql('SELECT')->add('*');
+        if($fields)
+            $sql->back()->add(':fields')->ibinds('fields', $fields);
+        $sql->add('FROM :table')->ibind('table', $table);
         if($where)
         {
-            $sql .= 'WHERE ';
+            $sql->add('WHERE');
             foreach($where as $key=>$val)
-                $sql .= "`$key` = ? AND ";
-            $sql = substr($sql, 0, -5);
+                $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add('AND');
+            $sql->back();
         }
-        $sql = rtrim($sql);
-        return $this->query($sql, $where);
+        return $sql->query();
     }
     
     public function selectOne($table, array $where = array(), array $fields = array())
     {
-        $sql = 'SELECT ';
-        if( ! $fields)
-            $sql .= '* ';
-        else
-        {
-            foreach($fields as $f)
-                $sql .= "`$f`, ";
-            $sql = substr($sql, 0, -2).' ';
-        }
-        $sql .= "FROM `$table` ";
+        $sql = $this->sql('SELECT')->add('*');
+        if($fields)
+            $sql->back()->add(':fields')->ibinds('fields', $fields);
+        $sql->add('FROM :table')->ibind('table', $table);
         if($where)
         {
-            $sql .= 'WHERE ';
+            $sql->add('WHERE');
             foreach($where as $key=>$val)
-                $sql .= "`$key` = ? AND ";
-            $sql = substr($sql, 0, -5).' ';
+                $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add('AND');
+            $sql->back();
         }
-        $sql .= 'LIMIT 1';
-        return $this->queryOne($sql, $where);
+        $sql->add('LIMIT 1');
+        return $sql->queryOne();
     }
     
-    public function exists($table, array $where)
+    public function exists($table, array $where = array())
     {
-        $sql = "SELECT 1 FROM `$table` ";
+        $sql = $this->sql('SELECT 1 FROM :table');
+        $sql->ibind('table', $table);
         if($where)
         {
-            $sql .= 'WHERE ';
+            $sql->add('WHERE');
             foreach($where as $key=>$val)
-                $sql .= "`$key` = ? AND ";
-            $sql = substr($sql, 0, -5).' ';
+                $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add('AND');
+            $sql->back();
         }
-        $sql .= 'LIMIT 1';
-        return (bool)$this->queryOne($sql, $where);
+        $sql->add('LIMIT 1');
+        return (bool)$sql->queryOne();
     }
     
     public function insert($table, array $params)
     {
-        $keystring = '';
-        $valstring = '';
-        foreach($params as $key=>$val)
-        {
-            $keystring .= "`$key`, ";
-            $valstring .= "?, ";
-        }
-        $keystring = substr($keystring, 0, -2);
-        $valstring = substr($valstring, 0, -2);
-        
-        $sql = "INSERT INTO $table ($keystring) VALUES ($valstring)";
-        return $this->exec($sql, $params);
+        $sql = $this->sql('INSERT INTO :table (:fields) VALUES (:params)');
+        $sql->ibind('table', $table);
+        $sql->ibinds('fields', array_keys($params));
+        $sql->vbinds('params', $params);
+        return $sql->exec();
     }
     
     public function update($table, array $params, array $where)
     {
-        $sql = "UPDATE `$table` SET ";
+        $sql = $this->sql('UPDATE :table SET');
+        $sql->ibind('table', $table);
         foreach($params as $key=>$val)
-            $sql .= "`$key` = ?, ";
-        $sql = substr($sql, 0, -2).' ';
+            $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add(',');
+        $sql->back();
         if($where)
         {
-            $sql .= 'WHERE ';
+            $sql->add('WHERE');
             foreach($where as $key=>$val)
-                $sql .= "`$key` = ? AND ";
-            $sql = substr($sql, 0, -5);
+                $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add('AND');
+            $sql->back();
         }
-        $sql = trim($sql);
-        $binds = array_merge(array_values($params), array_values($where));
-        return $this->exec($sql, $binds);
+        return $sql->exec();
     }
     
     public function upsert($table, array $params, array $where)
@@ -200,16 +180,16 @@ class Database
     
     public function delete($table, array $where)
     {
-        $sql = "DELETE FROM `$table` ";
+        $sql = $this->sql('DELETE FROM :table');
+        $sql->ibind('table', $table);
         if($where)
         {
-            $sql .= 'WHERE ';
+            $sql->add('WHERE');
             foreach($where as $key=>$val)
-                $sql .= "`$key` = ? AND ";
-            $sql = substr($sql, 0, -5);
+                $sql->add(':key = :val')->ibind('key', $key)->vbind('val', $val)->add('AND');
+            $sql->back();
         }
-        $sql = trim($sql);
-        return $this->exec($sql, $where);
+        return $sql->exec();
     }
     
     public function begin()
