@@ -3,14 +3,23 @@ namespace Arsenal\Misc;
 
 class Crypt
 {
+    public function setDefaultSalt($salt)
+    {
+        $this->defaultSalt = $salt;
+    }
+    
     public function bcrypt($string)
     {
         $salt = sha1(mt_rand());
+        $subsalt = substr($salt, 0, 21);
+        $string = $this->saltedScramble($string, $subsalt);
         return crypt($string, '$2y$08$'.$salt.'$');
     }
     
     public function bcryptMatch($string, $hash)
     {
+        $subsalt = substr($hash, 7, 21);
+        $string = $this->saltedScramble($string, $subsalt);
         return crypt($string, $hash) === $hash;
     }
     
@@ -51,5 +60,15 @@ class Crypt
             return false;
         
         return $data;
+    }
+    
+    private function saltedScramble($string, $salt)
+    {
+        $string = strrev($string);
+        $newstr = '';
+        for($i=0; $i<strlen($string); $i++)
+            $newstr .= $salt[$i % strlen($salt)].$string[$i];
+        $newstr .= $salt;
+        return $newstr;
     }
 }
