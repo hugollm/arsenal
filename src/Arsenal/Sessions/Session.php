@@ -148,7 +148,8 @@ abstract class Session
     public function destroy()
     {
         $this->start();
-        $this->delete($this->id);
+        if($this->id)
+            $this->delete($this->id);
         $this->unregister();
         $this->startPayload = array();
         $this->normalData = array();
@@ -165,7 +166,6 @@ abstract class Session
         // chance of cleaning up expired sessions
         if($this->chance($this->cleanupChance))
             $this->cleanup();
-        
         
         // check if session already exists
         $this->id = $this->cookies->get($this->cookieName);
@@ -184,7 +184,7 @@ abstract class Session
                 $this->destroy();
             }
             
-            if( ! $this->startPayload)
+            if( ! $this->normalData and ! $this->flashData)
                 $this->destroy();
         }
     }

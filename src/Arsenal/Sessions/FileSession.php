@@ -1,6 +1,5 @@
 <?php
 namespace Arsenal\Sessions;
-
 use Arsenal\Http\CookieJar;
 
 class FileSession extends Session
