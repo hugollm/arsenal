@@ -22,16 +22,11 @@ class Table
     {
         if($type === 'serial')
         {
-            $type = 'bigint';
+            $type = 'integer';
             $options['autoincrement'] = true;
             $options['unsigned'] = true;
         }
-        elseif($type === 'ref')
-        {
-            $type = 'bigint';
-            $options['unsigned'] = true;
-        }
-        elseif($type === 'natural')
+        elseif($type === 'reference')
         {
             $type = 'integer';
             $options['unsigned'] = true;
