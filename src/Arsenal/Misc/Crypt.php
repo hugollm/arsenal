@@ -65,6 +65,7 @@ class Crypt
     private function saltedScramble($string, $salt)
     {
         $string = strrev($string);
+        $salt = strrev($salt);
         $newstr = '';
         for($i=0; $i<strlen($string); $i++)
             $newstr .= $salt[$i % strlen($salt)].$string[$i];
