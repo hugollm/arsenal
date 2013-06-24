@@ -17,11 +17,9 @@ class AssetBundler
         $this->fluid = $bool;
     }
     
-    public function add($bundle, $file)
+    public function bundle($bundle, array $files)
     {
-        if( ! isset($this->bundles[$bundle]))
-            $this->bundles[$bundle] = array();
-        $this->bundles[$bundle][] = $file;
+        $this->bundles[$bundle] = $files;
     }
     
     public function getCssTag($bundle, $media = 'all')
