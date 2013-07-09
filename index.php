@@ -35,10 +35,9 @@ function methods(){call_user_func_array('Arsenal\\Misc\\Debugger::printMethods',
     ERROR HANDLING
 */
 $handler = new ErrorHandler;
-$handler->setKeepBuffer(true);
+// $handler->setShowErrors(false);
 $handler->addFocus('src/Arsenal');
 $handler->addFocus('play.php');
-// $handler->register(true, true, false);
 $handler->register();
 
 /*

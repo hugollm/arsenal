@@ -1,5 +1,6 @@
 <?php
 namespace Arsenal\Misc;
+use Arsenal\Loggers\Logger;
 
 class ErrorHandler
 {
@@ -7,6 +8,9 @@ class ErrorHandler
     private $unfocused = array();
     private $keepBuffer = false;
     private $listenShutdown = true;
+    private $showErrors = true;
+    private $logger = null;
+    private $callback = null;
     
     public function addFocus($path)
     {
@@ -18,14 +22,27 @@ class ErrorHandler
         $this->unfocused[] = $path;
     }
     
-    public function setKeepBuffer($keepBuffer)
+    public function setShowErrors($bool)
     {
-        $this->keepBuffer = $keepBuffer;
+        $this->showErrors = $bool;
+    }
+    
+    public function setLogger(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+    
+    public function setCallback($callback)
+    {
+        if( ! is_callable($callback))
+            throw \InvalidArgumentException('Invalid callback');
+        
+        $this->callback = $callback;
     }
     
     public function register($errors = true, $exceptions = true, $shutdown = true)
     {
-        if($errors and $exceptions and $shutdown)
+        if( ! $this->showErrors)
             error_reporting(0);
         
         if($errors)
@@ -39,12 +56,17 @@ class ErrorHandler
     public function handleError($code, $message, $filename, $line)
     {
         $e = new \ErrorException($message, $code, 0, $filename, $line);
-        $this->printException($e);
+        $this->handleException($e);
     }
     
-    public function handleException($e)
+    public function handleException($e, $fatal = false)
     {
-        $this->printException($e);
+        if($this->logger)
+            $this->logException($e);
+        if($this->callback)
+            call_user_func($this->callback, $e);
+        if($this->showErrors)
+            $this->printException($e, $fatal);
     }
     
     public function handleShutdown()
@@ -55,11 +77,11 @@ class ErrorHandler
         if($error and in_array($error['type'], $handle))
         {
             $e = new \ErrorException($error['message'], $error['type'], 0, $error['file'], $error['line']);
-            $this->printException($e, true);
+            $this->handleException($e, true);
         }
     }
     
-    public function printException($e, $fatal = false)
+    private function printException($e, $fatal = false)
     {
         ob_start();
         self::printCss();
@@ -93,6 +115,11 @@ class ErrorHandler
         ob_end_clean();
         
         $this->send($output);
+    }
+    
+    private function logException($e)
+    {
+        $this->logger->error($e->getMessage());
     }
     
     private function getErrorType($code)
