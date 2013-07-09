@@ -5,8 +5,7 @@ class HtmlLogger extends Logger
 {
     protected function commit($level, $message)
     {
-        $paddedLevel = str_pad($level, 8, ' ', STR_PAD_LEFT);
-        $message = strtoupper($paddedLevel).': '.$message;
+        $message = strtoupper($level).': '.$message;
         
         if($level == 'debug')
             $color = '#ddf';

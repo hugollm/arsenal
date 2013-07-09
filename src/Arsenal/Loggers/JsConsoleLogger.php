@@ -5,8 +5,7 @@ class JsConsoleLogger extends Logger
 {
     protected function commit($level, $message)
     {
-        $paddedLevel = str_pad($level, 8, ' ', STR_PAD_LEFT);
-        $message = json_encode('%c'.strtoupper($paddedLevel).': %c'.$message);
+        $message = json_encode('%c'.strtoupper($level).': %c'.$message);
         
         if($level == 'debug')
             $color = '#999';
