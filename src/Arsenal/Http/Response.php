@@ -3,7 +3,7 @@ namespace Arsenal\Http;
 
 class Response
 {
-    private $request = null;
+    private $request;
     private $status = 200;
     private $body = '';
     private $headers = array();
@@ -12,7 +12,7 @@ class Response
     private $calculateEtag = false;
     private $etag = null;
     
-    public function __construct(Request $request = null)
+    public function __construct(Request $request)
     {
         $this->request = $request;
     }
@@ -29,6 +29,8 @@ class Response
     
     public function setStatus($status)
     {
+        if( ! is_int($status) or $status < 100 or $status > 600)
+            throw new \InvalidArgumentException('Invalid HTTP status code: '.$status);
         $this->status = $status;
     }
     
@@ -76,7 +78,7 @@ class Response
         $this->setHeader('Expires', $header);
     }
     
-    public function setCache($calculateEtag, $expires = null)
+    public function setCache($expires = null, $calculateEtag = true)
     {
         $this->setCalculateEtag($calculateEtag);
         if($expires)
@@ -97,10 +99,8 @@ class Response
     {
         if($expiration !== null)
             $expiration = strtotime($expiration);
-        if($path === null and $this->request)
+        if($path === null)
             $path = $this->request->getBasePath();
-        if($path === null and ! $this->request)
-            $path = '/';
         
         $this->cookies[] = array(
             'key' => $key,
@@ -119,11 +119,6 @@ class Response
     public function dropCookie($key, $path = null, $domain = null, $secureOnly = false, $httpOnly = true)
     {
         $this->setCookie($key, false, '-5 years', $path, $domain, $secureOnly, $httpOnly);
-    }
-    
-    public function setRedirect($url)
-    {
-        $this->setHeader('Location', $url);
     }
     
     public function setRefresh($url, $wait)
@@ -237,21 +232,29 @@ class Response
         die;
     }
     
-    public function sendRedirect($url, $status = 200)
+    public function redirect($to, $scheme = null)
     {
         $this->setBody('');
-        $this->setStatus($status);
-        $this->setRedirect($url);
+        if( ! $scheme)
+            $scheme = $this->request->getScheme();
+        
+        if( ! preg_match('|^[a-z]+://|', $to))
+            $to = $scheme.'://'.$this->request->getHost().$this->request->getBasePath().$this->normalizePath($to);
+        
+        $this->setHeader('Location', $to);
         $this->sendHard();
     }
     
-    public function sendRedirectBack()
+    public function redirectBack($scheme = null)
     {
-        if( ! $this->request)
-            throw new \RuntimeException('To redirect back you have to set a Request with setContext()');
-        
-        $url = $this->request->getReferer();
-        $this->sendRedirect($url);
+        $to = $this->request->getReferer();
+        $this->redirect($to, $scheme);
+    }
+    
+    public function redirectSelf($scheme = null)
+    {
+        $to = $this->request->getPathInfo();
+        $this->redirect($to, $scheme);
     }
     
     public function sendNotModified()
@@ -263,7 +266,7 @@ class Response
     
     private function tryNotModified()
     {
-        if($this->etag and $this->request and $this->etag == $this->request->getEtag())
+        if($this->etag and $this->etag == $this->request->getEtag())
             $this->sendNotModified();
     }
     
@@ -288,6 +291,14 @@ class Response
             flush();
         }
         fclose($file);
+    }
+    
+    private function normalizePath($path)
+    {
+        $path = trim($path, '/');
+        while(strpos($path, '//') !== false)
+            $path = str_replace('//', '/', $path);
+        return '/'.$path;
     }
     
     private function guessMime($filename)
