@@ -21,7 +21,6 @@ header('Content-Type: text/html; charset=utf-8');
 require 'src/Arsenal/Misc/Autoloader.php';
 $loader = new Autoloader;
 $loader->setCheckFileSystem(true);
-$loader->addFolder('legacy');
 $loader->addFolder('src');
 $loader->register();
 
