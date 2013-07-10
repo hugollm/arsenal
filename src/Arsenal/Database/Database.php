@@ -58,7 +58,7 @@ class Database
         if( ! $this->pdo)
         {
             $driver = $this->getDriver();
-            $options = $options = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
+            $options = array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION);
             
             // 1002 is for PDO::MYSQL_ATTR_INIT_COMMAND, the number is
             // used instead because of a possible php bug
