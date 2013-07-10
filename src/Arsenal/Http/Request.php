@@ -120,6 +120,11 @@ class Request
         return $host;
     }
     
+    public function getPort()
+    {
+        return $this->server['SERVER_PORT'];
+    }
+    
     public function getPath()
     {
         return $this->getBasePath().$this->getPathInfo();
