@@ -3,11 +3,6 @@ namespace Arsenal\Misc;
 
 class Crypt
 {
-    public function setDefaultSalt($salt)
-    {
-        $this->defaultSalt = $salt;
-    }
-    
     public function bcrypt($string)
     {
         $salt = sha1(mt_rand());
