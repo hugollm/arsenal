@@ -37,7 +37,7 @@ class Table
         if($type === 'integer' and $size === 'big')
             $type = 'bigint';
         
-        if(is_int($size))
+        if(is_numeric($size))
             $options['length'] = $size;
         
         $this->call('addColumn', array($name, $type, $options));
